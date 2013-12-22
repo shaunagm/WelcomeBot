@@ -2,6 +2,7 @@
 import socket 
 import time
 import Queue
+import random
 from threading import Thread
 
 # Some basic variables used to configure the bot        
@@ -23,10 +24,10 @@ joinchan(channel)
 # Creates separate thread for reading messages from the server
 def getIRC():
   while True:
-    ircmsg = ircsock.recv(2048) # receive data from the server   <-------- this needs to be fixed!  Threading?  Buffer file?
+    ircmsg = ircsock.recv(2048) # receive data from the server   
     ircmsg = ircmsg.strip('\n\r') # removing any unnecessary linebreaks.
-    q.put(ircmsg)
-    print(ircmsg) # Here we print what's coming from the server
+    q.put(ircmsg) # Put in queue for main loop to read
+    print(ircmsg) 
 
 q = Queue.LifoQueue()
 t = Thread(target=getIRC)
@@ -40,15 +41,11 @@ class newcomer(object):  # Newcomer class created when someone joins the room
         self.nick = nick
         self.born = time.time()
 	self.status = 0
-        print "newcomer object named " + self.nick + " created"
 
     def changeStatus(self,status):
-        self.status = status
-        print "status of newcomer object changed to " + str(self.status)
-	# Status options: 0 (nothing has happened since joining), 1 (someone has talked but not to newcomer), 2 (someone has talked to newcomer)
+        self.status = status	# Right now there's just status 0 (not replied to) and 1 (replied to)
 
     def aroundFor(self):
-#        print "timecheck: " + str(self.nick) + " has been around for " + str(time.time() - self.born)
         return time.time() - self.born
 
 
@@ -56,11 +53,15 @@ class newcomer(object):  # Newcomer class created when someone joins the room
 def ping(): # Responds to server Pings.
   ircsock.send("PONG :pingis\n")  
 
-def hello(speaker): # This function responds to a user that inputs "Hello Mybot"
-  ircsock.send("PRIVMSG "+ channel +" :Hello! "+ speaker + "\n")
+def hello(speaker,greeting): # This function responds to a user that inputs "Hello Mybot"
+  ircsock.send("PRIVMSG " + channel +" :" + greeting + " " + speaker + "\n")
 
-def welcome(speaker):
-  ircsock.send("PRIVMSG "+ channel +" :Welcome "+ speaker + "!\n")
+def help(speaker): # This function explains what the bot is when queried.
+  ircsock.send("PRIVMSG " + channel +" :I'm a bot!  I'm from here: https://github.com/shaunagm/oh-irc-bot. You can change my behavior by submitting a pull request or by talking to shauna. \n")
+
+def welcome(newcomer):  # This welcomes a specific person.
+  ircsock.send("PRIVMSG "+ channel +" :Welcome "+ newcomer + "!\n")
+  ircsock.send("PRIVMSG "+ channel +" :(pssst shauna there's someone here)\n")
 
 
 #### Main function
@@ -80,16 +81,16 @@ while 1:
 
     if ircmsg.find("PRIVMSG "+ channel) != -1: # If someone has spoken into the channel
       for i in newList:
-	print "speaker: " + speaker
-	print "i.nick: " + i.nick
         if speaker != i.nick: # Don't turn off response if the person speaking is the person who joined.
           i.changeStatus(1)  # set status to "someone has spoken in channel" for all waiting newcomers
-          print "yay now never respond"
 
-    # if someone has spoken directly to a newcomer, set status to 'someone has replied to newcomer'
-
-    if ircmsg.find(":Hello "+ botnick) != -1: # Response to 'Hello botnick'
-      hello(speaker)
+    if ircmsg.find(botnick) != -1 and ircmsg.find("PRIVMSG #") != -1: # If someone talks to (or refers to) the bot
+	helloArray = ['Hello','hello','Hi','hi','Hey','hey','Yo','yo ','Sup','sup']
+        helpArray = ['Help','help','Info','info','faq','FAQ','explain yourself','EXPLAIN YOURSELF']
+        if any(x in ircmsg for x in helloArray):
+	  hello(speaker,random.choice(helloArray))
+        if any(y in ircmsg for y in helpArray):
+          help(speaker)
 
     if ircmsg.find("PING :") != -1: # if the server pings us then we've got to respond!
       ping()
