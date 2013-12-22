@@ -18,7 +18,7 @@ ircsock.send("NICK "+ botnick +"\n") # here we actually assign the nick to the b
 def joinchan(chan): # This function is used to join channels.
   ircsock.send("JOIN "+ chan +"\n")
 
-joinchan(channel) # Join the channel using the functions we previously defined
+joinchan(channel)
 
 # Creates separate thread for reading messages from the server
 def getIRC():
@@ -39,12 +39,13 @@ class newcomer(object):  # Newcomer class created when someone joins the room
     def __init__(self, nick):
         self.nick = nick
         self.born = time.time()
-        self.status = 0
+	self.status = 0
         print "newcomer object named " + self.nick + " created"
 
     def changeStatus(self,status):
         self.status = status
         print "status of newcomer object changed to " + str(self.status)
+	# Status options: 0 (nothing has happened since joining), 1 (someone has talked but not to newcomer), 2 (someone has talked to newcomer)
 
     def aroundFor(self):
 #        print "timecheck: " + str(self.nick) + " has been around for " + str(time.time() - self.born)
@@ -68,9 +69,24 @@ newList = []
 
 while 1: 
 
+  for i in newList:
+     if i.aroundFor() > 5 and i.status == 0:
+	print welcome(i.nick)
+        i.changeStatus(2)
+
   if q.empty() == 0:
     ircmsg = q.get()
     speaker = ircmsg.split(":")[1].split("!")[0]
+
+    if ircmsg.find("PRIVMSG "+ channel) != -1: # If someone has spoken into the channel
+      for i in newList:
+	print "speaker: " + speaker
+	print "i.nick: " + i.nick
+        if speaker != i.nick: # Don't turn off response if the person speaking is the person who joined.
+          i.changeStatus(1)  # set status to "someone has spoken in channel" for all waiting newcomers
+          print "yay now never respond"
+
+    # if someone has spoken directly to a newcomer, set status to 'someone has replied to newcomer'
 
     if ircmsg.find(":Hello "+ botnick) != -1: # Response to 'Hello botnick'
       hello(speaker)
@@ -79,9 +95,6 @@ while 1:
       ping()
 
     if ircmsg.find("JOIN "+ channel) != -1:  # If someone joins #channel
-      newList.append(newcomer(speaker))		# Create a newcomer object and append to list.
+      if speaker != botnick:  # Probably a cleaner way to do this
+        newList.append(newcomer(speaker))		# Create a newcomer object and append to list.
 
-  for i in newList:
-     if i.aroundFor() > 3 and i.status == 0:
-	print welcome(i.nick)
-        i.changeStatus(1)
