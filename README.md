@@ -3,9 +3,9 @@
 oh-irc-bot (potential name: Nightlightbot) is a bot for welcoming people into the #openhatch irc channel 
 when no one is paying attention.  The goals are to:
 
-1) alert community members when someone knew enters the room and says hello (either by using their nick
+1. alert community members when someone knew enters the room and says hello (either by using their nick
 in a response, or by sending a private message)
-2) helping a person to feel welcome even when there's no one around, and providing more information about
+2. helping a person to feel welcome even when there's no one around, and providing more information about
 staying in touch
 
 # Deets
@@ -14,20 +14,22 @@ staying in touch
 
 Proposed
 
-1) someone joins, says hi/hey/hello immediately, and no one responds for 60 seconds
-2) someone says hi/hey/hello with no nicks after it, and no one responds for 60 seconds
-3) someone joins, says nothing, and no one responds for a while but they're still there?
+1. someone joins; says hi/hey/hello; no one responds for X seconds; bot RESPONDS [YES]
+2. someone joins; says nothing for Y seconds; no one responds for X seconds; bot checks list of known nicks:
+    - if unknown RESPONDS
+    - if known PMs maintainers
+3. someone says hi/hey/hello with no nicks in channel after it; no one responds for X seconds; bot RESPONDS ?
 
 ## Responses
 
 May 
 
-Include "maintainers" nicks so they get pinged?
-Suggest waiting til the morning, or emailing.
+* Include "maintainers" nicks so they get pinged?
+* Suggest waiting til the morning, or emailing.
 
 ## Implementation ideas
 
-Keep last line said in chat (remember that ircmsg will prob include joins and parts and nick changes.
+May want to keep a list of known nicks so channel regulars aren't constantly getting bugged by the bot.
 
 # How to help
 
@@ -38,4 +40,6 @@ I will come back and improve this documentation later.
 
 # Credit
 
-This bot was adapted from code found here: http://wiki.shellium.org/w/Writing_an_IRC_bot_in_Python
+This bot was adapted from code found [here](http://wiki.shellium.org/w/Writing_an_IRC_bot_in_Python).
+
+Also [this](http://docs.python.org/2/library/queue.html) has been very helpful.
