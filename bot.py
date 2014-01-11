@@ -10,7 +10,7 @@ from threading import Thread
 server = "irc.freenode.net" 
 channel = "#openhatch" 
 botnick = "WelcomeBot" 
-waitTime = 5        # Amount of time after joining before bot replies to someone
+waitTime = 60        # Amount of time after joining before bot replies to someone
 
 # Classes
 class newcomer(object):  # Newcomer class created when someone joins the room
@@ -91,6 +91,7 @@ while 1:  # Loop forever
             welcome(i.nick)
             i.updateStatus()
             addPerson(i.nick)
+            newList.remove(i)
 
     if q.empty() == 0:
         ircmsg = q.get()
@@ -102,12 +103,14 @@ while 1:  # Loop forever
                 if actor != i.nick: # Don't turn off response if the person speaking is the person who joined.
                     i.updateStatus()	# Sets status to 1
                     addPerson(i.nick)
+                    newList.remove(i)
                 ## Else: Do we want to do something extra if the person who joined the chat says something with no response?
 
         if ircmsg.find("JOIN "+ channel) != -1:  # If someone joins #channel
             if actor != botnick:  # Remove the case where the bot gets a message that the bot has joined.
                 if actor not in nickArray:
-                    newList.append(newcomer(actor))
+                    if actor not in (i.nick for i in newList):
+                        newList.append(newcomer(actor))
 
         # Unwelcome functions
         if ircmsg.find(botnick) != -1 and ircmsg.find("PRIVMSG #") != -1: # If someone talks to (or refers to) the bot
