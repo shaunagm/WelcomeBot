@@ -2,6 +2,7 @@
 import socket 
 import time
 import csv
+import string
 import Queue
 import random
 from threading import Thread
@@ -47,7 +48,7 @@ def help(actor): # This function explains what the bot is when queried.
     ircsock.send("PRIVMSG " + channel +" :I'm a bot!  I'm from here: https://github.com/shaunagm/oh-irc-bot. You can change my behavior by submitting a pull request or by talking to shauna. \n")
 
 def welcome(newcomer):  # This welcomes a specific person.
-    ircsock.send("PRIVMSG "+ channel +" :Welcome "+ newcomer + "!  The channel's pretty quiet right now, so I thought I'd say hello, and ping my maintainers (shauna, paulproteus) that you're here.  If no one responds for a while, try emailing us at hello@openhatch.org or just coming back later.  FYI, you're now on my list of known nicknames, so I won't bother you again.\n")
+    ircsock.send("PRIVMSG "+ channel +" :Welcome "+ newcomer + "!  The channel's pretty quiet right now, so I thought I'd say hello, and ping some people (like shauna, paulproteus, marktraceur) that you're here.  If no one responds for a while, try emailing us at hello@openhatch.org or just coming back later.  FYI, you're now on my list of known nicknames, so I won't bother you again.\n")
 
 def makeNickArray():  # On startup, makes array of nicks from Nicks.txt.  New info will be written to both array and txt file.
     nickArray = []
@@ -59,11 +60,12 @@ def makeNickArray():  # On startup, makes array of nicks from Nicks.txt.  New in
     # Do I need to explicitly close this file?
 
 def addPerson(person):  # Adds newcomer to list of known nicks
-    nickArray.append(person)
+    person = person.replace("_","")
+    nickArray.append([person])
+    print nickArray
     with open('nicks.csv', 'a') as csvfile:
         nickwriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
         nickwriter.writerow([person])
-
 
 # Startup
 ircsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -108,7 +110,7 @@ while 1:  # Loop forever
 
         if ircmsg.find("JOIN "+ channel) != -1:  # If someone joins #channel
             if actor != botnick:  # Remove the case where the bot gets a message that the bot has joined.
-                if actor not in nickArray:
+                if [actor.replace("_","")] not in nickArray:
                     if actor not in (i.nick for i in newList):
                         newList.append(newcomer(actor))
 
