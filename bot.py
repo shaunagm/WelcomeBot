@@ -41,11 +41,11 @@ def getIRC():           # Creates separate thread for reading messages from the 
 def ping(): # Responds to server Pings.
     ircsock.send("PONG :pingis\n")  
 
-def hello(actor,greeting): # This function responds to a user that inputs "Hello Mybot"
-    ircsock.send("PRIVMSG " + channel +" :" + greeting + " " + actor + "\n")
+def hello(actor,greeting, chan=channel): # This function responds to a user that inputs "Hello Mybot"
+    ircsock.send("PRIVMSG " + chan +" :" + greeting + " " + actor + "\n")
 
-def help(actor): # This function explains what the bot is when queried.
-    ircsock.send("PRIVMSG " + channel +" :I'm a bot!  I'm from here: https://github.com/shaunagm/oh-irc-bot. You can change my behavior by submitting a pull request or by talking to shauna. \n")
+def help(actor, chan=channel): # This function explains what the bot is when queried.
+    ircsock.send("PRIVMSG " + chan +" :I'm a bot!  I'm from here: https://github.com/shaunagm/oh-irc-bot. You can change my behavior by submitting a pull request or by talking to shauna. \n")
 
 def welcome(newcomer):  # This welcomes a specific person.
     ircsock.send("PRIVMSG "+ channel +" :Welcome "+ newcomer + "!  The channel's pretty quiet right now, so I thought I'd say hello, and ping some people (like shauna, paulproteus, marktraceur) that you're here.  If no one responds for a while, try emailing us at hello@openhatch.org or just coming back later.  FYI, you're now on my list of known nicknames, so I won't bother you again.\n")
@@ -115,11 +115,14 @@ while 1:  # Loop forever
                         newList.append(newcomer(actor))
 
         # Unwelcome functions
-        if ircmsg.find(botnick) != -1 and ircmsg.find("PRIVMSG #") != -1: # If someone talks to (or refers to) the bot
+        if ircmsg.find(botnick) != -1 and ircmsg.find("PRIVMSG") != -1: # If someone talks to (or refers to) the bot
+            chan = channel
+            if ircmsg.find("PRIVMSG " + botnick) != -1:
+                chan = actor
             if any(x in ircmsg for x in helloArray):
-                hello(actor,random.choice(helloArray))
+                hello(actor,random.choice(helloArray), chan)
             if any(y in ircmsg for y in helpArray):
-                help(actor)
+                help(actor, chan)
 
         if ircmsg.find("PING :") != -1: # if the server pings us then we've got to respond!
             ping()
