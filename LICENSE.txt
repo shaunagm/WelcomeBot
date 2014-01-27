@@ -1,0 +1,4 @@
+oh-irc-bot is licensed as CC BY 4.0
+
+The details of this license, including a human readable summary, can be found here:
+http://creativecommons.org/licenses/by/4.0/
