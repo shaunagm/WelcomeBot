@@ -5,6 +5,8 @@ import csv
 import string
 import Queue
 import random
+import re
+import itertools
 from threading import Thread
 
 # Some basic variables used to configure the bot        
@@ -81,8 +83,8 @@ t.start()
 nickArray = makeNickArray()
 
 newList = []  # This is the array of newcomer objects that people who join the room are added to.
-helloArray = ['Hello','hello','Hi','hi','Hey','hey','Yo','yo ','Sup','sup']
-helpArray = ['Help','help','Info','info','faq','FAQ','explain yourself','EXPLAIN YOURSELF']
+helloArray = ['hello','hi','hey','yo ','sup']
+helpArray = ['help','info','faq','explain yourself']
 
 while 1:  # Loop forever
 
@@ -117,14 +119,29 @@ while 1:  # Loop forever
                 if actor == i.nick:
                     newList.remove(i)   # Remove them from the list
 
+
         # Unwelcome functions
-        if ircmsg.find(botnick) != -1 and ircmsg.find("PRIVMSG") != -1: # If someone talks to (or refers to) the bot
+        # Reply if someone addresses the bot in a message
+
+        # extract only message content (exclude prefix containing meta data)
+        m = re.match(":[^:]+PRIVMSG[^:]+:(.*)", ircmsg)
+        try: # tokenize message into words
+            ircmsg_clean = m.group(1)
+            ircmsg_words = re.split("[\s\.,;!?]+", ircmsg_clean)
+        except AttributeError:  # message couldn't be extracted
+            ircmsg_words = None
+
+        # test if message could be extracted and contains name of bot and any of the key words (hello or help arrays)
+        if ircmsg_words and botnick in ircmsg_words: # if a message contains bot's name
             chan = channel
-            if ircmsg.find("PRIVMSG " + botnick) != -1:
-                chan = actor
-            if any(x in ircmsg for x in helloArray):
+            
+            ircmsg_words = map(lambda x: x.lower(), ircmsg_words) # lowercase message
+            ircmsg_words = map(lambda word: ''.join(letter[0] for letter in itertools.groupby(word)), ircmsg_words) # collapse series of consecutive equal letters into one (e.g. "heeelp" -> "help")
+            ircmsg_words = ['hello' if word == 'helo' else word for word in ircmsg_words] # fix 'hello' word if it was affected by collapsing above
+            
+            if any(x in ircmsg_words for x in helloArray): # if message contains a "hello" word
                 hello(actor,random.choice(helloArray), chan)
-            if any(y in ircmsg for y in helpArray):
+            if any(y in ircmsg_words for y in helpArray): # if message contains a "help" word
                 help(actor, chan)
 
         if ircmsg.find("PING :") != -1: # if the server pings us then we've got to respond!
