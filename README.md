@@ -3,7 +3,7 @@
 oh-irc-bot (or "WelcomeBot", its IRC nick) is a bot for welcoming people into the #openhatch irc channel 
 when no one is paying attention.  The goals are to:
 
-1. alert community members when someone knew enters the room and says hello (either by using their nick
+1. alert community members when someone new enters the room and says hello (either by using their nick
 in a response, or by sending a private message)
 2. help a person to feel welcome even when there's no one around, and providing more information about
 staying in touch
