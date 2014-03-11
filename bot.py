@@ -6,6 +6,7 @@ import string
 import Queue
 import random
 from threading import Thread
+from re import search
 
 # Some basic variables used to configure the bot        
 server = "irc.freenode.net" 
@@ -65,6 +66,15 @@ def addPerson(person):  # Adds newcomer to list of known nicks
         nickwriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
         nickwriter.writerow([person])
 
+def getWelcomeRegEx(stringArray):
+    #make regex case-insenstive
+    pattern = r'(?i)'
+    for s in stringArray:
+        pattern += r'(?:[ :]'+s+r'(?:[ \.!\?,\)]|$))|'
+    #delete trailing '|'
+    pattern = pattern[:-1]
+    return pattern
+
 # Startup
 ircsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 ircsock.connect((server, 6667)) # Here we connect to the server using the port 6667
@@ -81,8 +91,10 @@ t.start()
 nickArray = makeNickArray()
 
 newList = []  # This is the array of newcomer objects that people who join the room are added to.
-helloArray = ['Hello','hello','Hi','hi','Hey','hey','Yo','yo ','Sup','sup']
-helpArray = ['Help','help','Info','info','faq','FAQ','explain yourself','EXPLAIN YOURSELF']
+helloArray = [r'hello',r'hi',r'hey',r'yo',r'sup']
+helpArray = [r'help',r'info',r'faq',r'explain yourself']
+helloPattern = getWelcomeRegEx(helloArray)
+helpPattern = getWelcomeRegEx(helpArray)
 
 while 1:  # Loop forever
 
@@ -120,11 +132,13 @@ while 1:  # Loop forever
         # Unwelcome functions
         if ircmsg.find(botnick) != -1 and ircmsg.find("PRIVMSG") != -1: # If someone talks to (or refers to) the bot
             chan = channel
+            matchHello = search(helloPattern,ircmsg)
+            matchHelp = search(helpPattern,ircmsg)
             if ircmsg.find("PRIVMSG " + botnick) != -1:
                 chan = actor
-            if any(x in ircmsg for x in helloArray):
+            if matchHello:
                 hello(actor,random.choice(helloArray), chan)
-            if any(y in ircmsg for y in helpArray):
+            if matchHelp:
                 help(actor, chan)
 
         if ircmsg.find("PING :") != -1: # if the server pings us then we've got to respond!
