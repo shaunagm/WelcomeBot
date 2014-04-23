@@ -46,7 +46,7 @@ def hello(actor, greeting, chan=channel): # This function responds to a user tha
     ircsock.send("PRIVMSG " + chan + " :" + greeting + " " + actor + "\n")
 
 def help(actor, chan=channel): # This function explains what the bot is when queried.
-    ircsock.send("PRIVMSG " + chan + " :I'm a bot!  I'm from here: https://github.com/shaunagm/oh-irc-bot. You can change my behavior by submitting a pull request or by talking to shauna. \n")
+    ircsock.send("PRIVMSG " + chan + " :I'm a bot!  I'm from here: <https://github.com/shaunagm/oh-irc-bot>. You can change my behavior by submitting a pull request or by talking to shauna. \n")
 
 def welcome(newcomer):  # This welcomes a specific person.
     ircsock.send("PRIVMSG " + channel + " :Welcome " + newcomer + "!  The channel's pretty quiet right now, so I thought I'd say hello, and ping some people (like shauna, paulproteus, marktraceur) that you're here.  If no one responds for a while, try emailing us at hello@openhatch.org or just coming back later.  FYI, you're now on my list of known nicknames, so I won't bother you again.\n")
