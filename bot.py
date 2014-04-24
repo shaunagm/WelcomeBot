@@ -1,3 +1,7 @@
+#########################################################################
+############## The abundant notes are there for the newbs. ##############
+#########################################################################
+
 # Import some necessary libraries.
 import socket 
 import time
@@ -8,50 +12,77 @@ import random
 from threading import Thread
 from re import search
 
-# Some basic variables used to configure the bot        
+# Some basic variables used to configure the bot.
 server = "irc.freenode.net" 
 channel = "#openhatch" 
-botnick = "WelcomeBot" 
-waitTime = 60        # Amount of time after joining before bot replies to someone
+botnick = "WelcomeBot"
+channel_admins = "shauna, paulproteus, and marktraceur"
+waitTime = 60  # amount of time after joining before bot replies to someone
 
-# Classes
-class newcomer(object):  # Newcomer class created when someone joins the room
+
+#################### Classes ####################
+# Newcomer class that is created when someone joins the room.
+class NewComer(object):
 
         def __init__(self, nick):
             self.nick = nick
             self.born = time.time()
             self.status = 0
 
-        def updateStatus(self):
+        def update_status(self):
             self.status = 1
 
-        def aroundFor(self):
+        def around_for(self):
             return int(time.time() - self.born)
 
-# Functions!
-def joinchan(chan): 	# Joins channels
-    ircsock.send("JOIN " + chan + "\n")
 
-def getIRC():           # Creates separate thread for reading messages from the server
+#################### Functions! ####################
+# Joins specified channel.
+def join_channel(chan):
+    ircsock.send("JOIN {} \n".format(chan))
+
+
+# Creates separate thread for reading messages from the server.
+def msg_handler():
     while True:
-        ircmsg = ircsock.recv(2048) # receive data from the server   
-        ircmsg = ircmsg.strip('\n\r') # removing any unnecessary linebreaks.
-        q.put(ircmsg) # Put in queue for main loop to read
-        print(ircmsg) 
+        ircmsg = ircsock.recv(2048)  # receive data from the server
+        ircmsg = ircmsg.strip('\n\r')  # removing any unnecessary linebreaks
+        q.put(ircmsg)  # put in queue for main loop to read
+        print(ircmsg)
 
-def ping(): # Responds to server Pings.
+
+# Responds to server Pings.
+def pong():
     ircsock.send("PONG :pingis\n")  
 
-def hello(actor, greeting, chan=channel): # This function responds to a user that inputs "Hello Mybot"
-    ircsock.send("PRIVMSG " + chan + " :" + greeting + " " + actor + "\n")
 
-def help(actor, chan=channel): # This function explains what the bot is when queried.
-    ircsock.send("PRIVMSG " + chan + " :I'm a bot!  I'm from here: <https://github.com/shaunagm/oh-irc-bot>. You can change my behavior by submitting a pull request or by talking to shauna. \n")
+# This function responds to a user that inputs "Hello Mybot".
+def hello(actor, greeting, chan=channel):
+    ircsock.send("PRIVMSG {0} :{1} {2}\n".format(chan, greeting, actor))
 
-def welcome(newcomer):  # This welcomes a specific person.
-    ircsock.send("PRIVMSG " + channel + " :Welcome " + newcomer + "!  The channel's pretty quiet right now, so I thought I'd say hello, and ping some people (like shauna, paulproteus, marktraceur) that you're here.  If no one responds for a while, try emailing us at hello@openhatch.org or just coming back later.  FYI, you're now on my list of known nicknames, so I won't bother you again.\n")
 
-def makeNickArray():  # On startup, makes array of nicks from Nicks.txt.  New info will be written to both array and txt file.
+# This function explains what the bot is when queried.
+def help(actor, chan=channel):
+    ircsock.send("PRIVMSG {} :I'm a bot!  I'm from here <https://github"
+                 ".com/shaunagm/oh-irc-bot>.  You can change my behavior by "
+                 "submitting a pull request or by talking to shauna.\n"
+                 .format(chan))
+
+
+# This welcomes the "person" passed to it.
+def welcome(newcomer):
+    ircsock.send("PRIVMSG {0} :Welcome {1}!  The channel is pretty quiet "
+                 "right now, so I though I'd say hello, and ping some people "
+                 "(like {2}) that you're here.  If no one responds for a "
+                 "while, try emailing us at hello@openhatch.org or just try "
+                 "coming back later.  FYI, you're now on my list of known "
+                 "nicknames, so I won't bother you again.\n".format(channel,
+                                                                    newcomer))
+
+
+# On startup, makes array of nicks from nicks.csv.
+# New info will be written to the array AND the txt file.
+def make_nick_array():
     nickArray = []
     with open('nicks.csv', 'rb') as csvfile:
         nicksData = csv.reader(csvfile, delimiter=',', quotechar='|')
@@ -59,14 +90,18 @@ def makeNickArray():  # On startup, makes array of nicks from Nicks.txt.  New in
              nickArray.append(row)
     return nickArray
 
-def addPerson(person):  # Adds newcomer to list of known nicks
+
+# Adds NewComer to list of known nicks.
+def add_person(person):
     person = person.replace("_","")
     nickArray.append([person])
     with open('nicks.csv', 'a') as csvfile:
-        nickwriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        nickwriter = csv.writer(csvfile, delimiter=',', quotechar='|',
+                                quoting=csv.QUOTE_MINIMAL)
         nickwriter.writerow([person])
 
-def getWelcomeRegEx(stringArray):
+
+def get_welcome_regex(stringArray):
     #make regex case-insenstive
     pattern = r'(?i)'
     for s in stringArray:
@@ -75,72 +110,82 @@ def getWelcomeRegEx(stringArray):
     pattern = pattern[:-1]
     return pattern
 
-# Startup
+
+#################### Startup ####################
 ircsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-ircsock.connect((server, 6667)) # Here we connect to the server using the port 6667
-ircsock.send("USER " + botnick + " " + botnick + " " + botnick + " :This is http://openhatch.org/'s greeter bot.\n") # user authentication
-ircsock.send("NICK " + botnick + "\n") # here we actually assign the nick to the bot
-joinchan(channel)
+ircsock.connect((server, 6667))  # Here we connect to server using port 6667.
+ircsock.send("USER {0} {0} {0} :This is http://openhatch.org/'s greeter bot"
+             ".\n".format(botnick))  #bot authentication
+ircsock.send("NICK {}\n".format(botnick))  # Assign the nick to the bot.
+join_channel(channel)
 
 # Starts a separate thread to get messages from server
 q = Queue.LifoQueue()
-t = Thread(target=getIRC)   # calls getIRC() (defined above) in a separate thread
+# Calls getIRC(), defined above, in a separate thread.
+t = Thread(target=msg_handler)
 t.daemon = True
 t.start()
 
-nickArray = makeNickArray()
+nickArray = make_nick_array()
 
-newList = []  # This is the array of newcomer objects that people who join the room are added to.
-helloArray = [r'hello',r'hi',r'hey',r'yo',r'sup']
-helpArray = [r'help',r'info',r'faq',r'explain yourself']
-helloPattern = getWelcomeRegEx(helloArray)
-helpPattern = getWelcomeRegEx(helpArray)
+# This is the array of NewComer objects that people who join are added to.
+newList = []
+hello_array = [r'hello', r'hi', r'hey', r'yo', r'sup']
+help_array = [r'help', r'info', r'faq', r'explain yourself']
+hello_pattern = get_welcome_regex(hello_array)
+help_pattern = get_welcome_regex(help_array)
 
-while 1:  # Loop forever
+# Loop forever
+while 1:
 
     for i in newList:
-        if i.status == 0 and i.aroundFor() > waitTime:
+        if i.status == 0 and i.around_for() > waitTime:
             welcome(i.nick)
-            i.updateStatus()
-            addPerson(i.nick)
+            i.update_status()
+            add_person(i.nick)
             newList.remove(i)
 
     if q.empty() == 0:
         ircmsg = q.get()
         actor = ircmsg.split(":")[1].split("!")[0]
 
-        # Welcome functions
-        if ircmsg.find("PRIVMSG " + channel) != -1: # If someone has spoken into the channel
+        ##### Welcome functions #####
+        # If someone has spoken into the channel...
+        if ircmsg.find("PRIVMSG " + channel) != -1:
             for i in newList:
-                if actor != i.nick: # Don't turn off response if the person speaking is the person who joined.
-                    i.updateStatus()	# Sets status to 1
-                    addPerson(i.nick)
+                if actor != i.nick: # and is not the new NewComer
+                    i.update_status()  # set the status to 1
+                    add_person(i.nick)
                     newList.remove(i)
-                ## Else: Do we want to do something extra if the person who joined the chat says something with no response?
+                ## Else: Do we want to do something extra if the person who
+                # joined the chat says something with no response?
 
-        if ircmsg.find("JOIN " + channel) != -1:  # If someone joins #channel
-            if actor != botnick:  # Remove the case where the bot gets a message that the bot has joined.
-                if [actor.replace("_","")] not in nickArray:
+        # If someone joins #channel...
+        if ircmsg.find("JOIN " + channel) != -1:
+            if actor != botnick:  # and it is not the bot
+                if [actor.replace("_", "")] not in nickArray:
                     if actor not in (i.nick for i in newList):
-                        newList.append(newcomer(actor))
+                        newList.append(NewComer(actor))
 
-        if ircmsg.find("PART " + channel) != -1 or ircmsg.find("QUIT") != -1:  # If someone parts or quits the #channel
-            for i in newList:  # And that person is on the newlist (has entered channel within last 60 seconds)
+        # If someone parts or quits the #channel...
+        if ircmsg.find("PART " + channel) != -1 or ircmsg.find("QUIT") != -1:
+            for i in newList:  # and that person is on the newlist
                 if actor == i.nick:
-                    newList.remove(i)   # Remove them from the list
+                    newList.remove(i)   # remove them from the list
 
-        # Unwelcome functions
-        if ircmsg.find(botnick) != -1 and ircmsg.find("PRIVMSG") != -1: # If someone talks to (or refers to) the bot
+        ##### Unwelcome functions #####
+        # If someone talks to (or refers to) the bot.
+        if ircmsg.find(botnick) != -1 and ircmsg.find("PRIVMSG") != -1:
             chan = channel
-            matchHello = search(helloPattern,ircmsg)
-            matchHelp = search(helpPattern,ircmsg)
+            matchHello = search(hello_pattern, ircmsg)
+            matchHelp = search(help_pattern, ircmsg)
             if ircmsg.find("PRIVMSG " + botnick) != -1:
                 chan = actor
             if matchHello:
-                hello(actor,random.choice(helloArray), chan)
+                hello(actor, random.choice(hello_array), chan)
             if matchHelp:
                 help(actor, chan)
 
-        if ircmsg.find("PING :") != -1: # if the server pings us then we've got to respond!
-            ping()
-
+        # If the server pings us then we've got to respond!
+        if ircmsg.find("PING :") != -1:
+            pong()
