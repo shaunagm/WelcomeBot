@@ -76,8 +76,8 @@ def welcome(newcomer):
                  "(like {2}) that you're here.  If no one responds for a "
                  "while, try emailing us at hello@openhatch.org or just try "
                  "coming back later.  FYI, you're now on my list of known "
-                 "nicknames, so I won't bother you again.\n".format(channel,
-                                                                    newcomer))
+                 "nicknames, so I won't bother you "
+                 "again.\n".format(channel, newcomer, channel_admins))
 
 
 # On startup, makes array of nicks from nicks.csv.
