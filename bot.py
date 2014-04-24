@@ -83,17 +83,17 @@ def welcome(newcomer):
 # On startup, makes array of nicks from nicks.csv.
 # New info will be written to the array AND the txt file.
 def make_nick_array():
-    nickArray = []
+    nick_array = []
     with open('nicks.csv', 'rb') as csvfile:
-        nicksData = csv.reader(csvfile, delimiter=',', quotechar='|')
-        for row in nicksData:
-             nickArray.append(row)
-    return nickArray
+        nicks_data = csv.reader(csvfile, delimiter=',', quotechar='|')
+        for row in nicks_data:
+            nick_array.append(row)
+    return nick_array
 
 
 # Adds NewComer to list of known nicks.
 def add_person(person):
-    person = person.replace("_","")
+    person = person.replace("_", "")
     nickArray.append([person])
     with open('nicks.csv', 'a') as csvfile:
         nickwriter = csv.writer(csvfile, delimiter=',', quotechar='|',
@@ -101,10 +101,10 @@ def add_person(person):
         nickwriter.writerow([person])
 
 
-def get_welcome_regex(stringArray):
+def get_welcome_regex(string_array):
     #make regex case-insenstive
     pattern = r'(?i)'
-    for s in stringArray:
+    for s in string_array:
         pattern += r'(?:[ :]'+s+r'(?:[ \.!\?,\)]|$))|'
     #delete trailing '|'
     pattern = pattern[:-1]
@@ -115,7 +115,7 @@ def get_welcome_regex(stringArray):
 ircsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 ircsock.connect((server, 6667))  # Here we connect to server using port 6667.
 ircsock.send("USER {0} {0} {0} :This is http://openhatch.org/'s greeter bot"
-             ".\n".format(botnick))  #bot authentication
+             ".\n".format(botnick))  # bot authentication
 ircsock.send("NICK {}\n".format(botnick))  # Assign the nick to the bot.
 join_channel(channel)
 
@@ -153,7 +153,7 @@ while 1:
         # If someone has spoken into the channel...
         if ircmsg.find("PRIVMSG " + channel) != -1:
             for i in newList:
-                if actor != i.nick: # and is not the new NewComer
+                if actor != i.nick:  # and is not the new NewComer
                     i.update_status()  # set the status to 1
                     add_person(i.nick)
                     newList.remove(i)
