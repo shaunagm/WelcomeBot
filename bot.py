@@ -58,7 +58,7 @@ def pong():
 
 
 # This function responds to a user that inputs "Hello Mybot".
-def hello(actor, greeting):
+def hello(greeting):
     ircsock.send("PRIVMSG {0} :{1} {2}\n".format(channel, greeting, actor))
 
 
@@ -82,13 +82,13 @@ def welcome(newcomer):
 
 
 # Adds the current NewComer's nick to nicks.csv and known_nicks.
-def add_known_nick(person):
-    person = person.replace("_", "")
-    known_nicks.append([person])
+def add_known_nick(new_known_nick):
+    new_known_nick = new_known_nick.replace("_", "")
+    known_nicks.append([new_known_nick])
     with open('nicks.csv', 'a') as csvfile:
         nickwriter = csv.writer(csvfile, delimiter=',', quotechar='|',
                                 quoting=csv.QUOTE_MINIMAL)
-        nickwriter.writerow([person])
+        nickwriter.writerow([new_known_nick])
 
 
 # "I NEED NOTES!!!!", said the function.
@@ -152,8 +152,11 @@ while 1:  # loop forever
             add_known_nick(i.nick)
             newcomers.remove(i)
 
+    # If the queue is not empty...
     if q.empty() == 0:
+        # get the next msg in the queue
         ircmsg = q.get()
+        # and get the nick of the msg sender
         actor = ircmsg.split(":")[1].split("!")[0]
 
         ##### Welcome functions #####
@@ -189,7 +192,7 @@ while 1:  # loop forever
             if ircmsg.find("PRIVMSG " + botnick) != -1:
                 chan = actor
             if matchHello:
-                hello(actor, random.choice(hello_list))
+                hello(random.choice(hello_list))
             if matchHelp:
                 help()
 
