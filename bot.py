@@ -46,10 +46,10 @@ def join_channel(chan):
 # them to the console. This function will be run in a thread, see below.
 def msg_handler():
     while True:
-        ircmsg = ircsock.recv(2048)  # receive data from the server
-        ircmsg = ircmsg.strip('\n\r')  # removing any unnecessary linebreaks
-        q.put(ircmsg)  # put in queue for main loop to read
-        print(ircmsg)
+        new_msg = ircsock.recv(2048)  # receive data from the server
+        new_msg = new_msg.strip('\n\r')  # removing any unnecessary linebreaks
+        q.put(new_msg)  # put in queue for main loop to read
+        print(new_msg)
 
 
 # Responds to server Pings.
@@ -186,11 +186,8 @@ while 1:  # loop forever
         ##### Unwelcome functions #####
         # If someone talks to (or refers to) the bot.
         if ircmsg.find(botnick) != -1 and ircmsg.find("PRIVMSG") != -1:
-            chan = channel
             matchHello = search(hello_pattern, ircmsg)
             matchHelp = search(help_pattern, ircmsg)
-            if ircmsg.find("PRIVMSG " + botnick) != -1:
-                chan = actor
             if matchHello:
                 hello(random.choice(hello_list))
             if matchHelp:
