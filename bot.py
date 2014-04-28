@@ -1,5 +1,5 @@
 #########################################################################
-############## The abundant notes are there for the newbs. ##############
+################# Abundant notes are appreciated here! ##################
 #########################################################################
 
 # Import some necessary libraries.
@@ -15,9 +15,10 @@ from re import search
 server = "irc.freenode.net" 
 channel = "#openhatch-bots"
 botnick = "NooBot"
-channel_admins = "name1, name2, noobur"
+channel_admins = ('name1', 'name2', 'noobur')
     # "shauna, paulproteus, and marktraceur"
-waitTime = 60  # amount of time after joining before bot replies to someone
+wait_time = 60  # amount of time after joining before bot replies to someone
+change_wait = botnick + " --wait-time "
 
 
 #################### Classes ####################
@@ -58,12 +59,12 @@ def pong():
 
 
 # This function responds to a user that inputs "Hello Mybot".
-def hello(greeting):
+def bot_hello(greeting):
     ircsock.send("PRIVMSG {0} :{1} {2}\n".format(channel, greeting, actor))
 
 
 # This function explains what the bot is when queried.
-def help():
+def bot_help():
     ircsock.send("PRIVMSG {} :I'm a bot!  I'm from here <https://github"
                  ".com/shaunagm/oh-irc-bot>.  You can change my behavior by "
                  "submitting a pull request or by talking to 'fill in "
@@ -100,6 +101,22 @@ def get_welcome_regex(string_array):
     #delete trailing '|'
     pattern = pattern[:-1]
     return pattern
+
+
+# This function is used to change the wait time from the channel.
+# It confirms that the attempt is allowed and then returns the requested value.
+# If the attempt is not allowed, a message is sent to help
+def wait_time_change():
+    for admin in channel_admins:
+        if actor == admin:
+            finder = search(r'\d\d*', search(r'--wait-time \d\d*', ircmsg)
+                            .group())
+            ircsock.send("PRIVMSG {0} :{1} the wait time is changing to {2} "
+                         "seconds.\n".format(channel, actor, finder.group()))
+            return finder.group()
+    ircsock.send("PRIVMSG {0} :{1} you are not authorized to make that "
+                 "change. Please contact one of the channel admins {2} for "
+                 "assistance.\n".format(channel, actor, channel_admins))
 
 
 #################### Startup ####################
@@ -146,7 +163,7 @@ help_pattern = get_welcome_regex(help_list)
 while 1:  # loop forever
 
     for i in newcomers:
-        if i.status == 0 and i.around_for() > waitTime:
+        if i.status == 0 and i.around_for() > wait_time:
             welcome(i.nick)
             i.update_status()
             add_known_nick(i.nick)
@@ -189,9 +206,13 @@ while 1:  # loop forever
             matchHello = search(hello_pattern, ircmsg)
             matchHelp = search(help_pattern, ircmsg)
             if matchHello:
-                hello(random.choice(hello_list))
+                bot_hello(random.choice(hello_list))
             if matchHelp:
-                help()
+                bot_help()
+
+        # If someone tries to change the wait time...
+        if ircmsg.find(change_wait) != -1:
+            wait_time = wait_time_change()  # call this to check and change it
 
         # If the server pings us then we've got to respond!
         if ircmsg.find("PING :") != -1:
