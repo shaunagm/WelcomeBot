@@ -13,10 +13,9 @@ from re import search
 
 # Some basic variables used to configure the bot.
 server = "irc.freenode.net" 
-channel = "#openhatch-bots"
-botnick = "NooBot"
-channel_admins = ('name1', 'name2', 'noobur')
-    # "shauna, paulproteus, and marktraceur"
+channel = "#openhatch"
+botnick = 'WelcomeBot'
+channel_admins = ('shauna', 'paulproteus', 'marktraceur')
 wait_time = 60  # amount of time after joining before bot replies to someone
 change_wait = botnick + " --wait-time "
 
