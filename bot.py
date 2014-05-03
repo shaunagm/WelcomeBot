@@ -15,7 +15,7 @@ from re import search
 server = "irc.freenode.net" 
 channel = "#openhatch"
 botnick = 'WelcomeBot'
-channel_admins = ('shauna', 'paulproteus', 'marktraceur')
+channel_greeters = ['shauna', 'paulproteus', 'marktraceur']
 wait_time = 60  # amount of time after joining before bot replies to someone
 change_wait = botnick + " --wait-time "
 
@@ -66,19 +66,34 @@ def bot_hello(greeting):
 def bot_help():
     ircsock.send("PRIVMSG {} :I'm a bot!  I'm from here <https://github"
                  ".com/shaunagm/oh-irc-bot>.  You can change my behavior by "
-                 "submitting a pull request or by talking to 'fill in "
-                 "the blank'.\n".format(channel))
+                 "submitting a pull request or by talking to shauna"
+                 ".\n".format(channel))
+
+
+# Returns a grammatically correct string of the channel_greeters.
+def greeter_string(conjunction):
+    greeters = ""
+    if len(channel_greeters) > 2:
+        for name in channel_greeters[:-1]:
+            greeters += "{}, ".format(name)
+        greeters += "{0} {1}".format(conjunction, channel_greeters[-1])
+    elif len(channel_greeters) == 2:
+        greeters = "{0} {1} {2}".format(channel_greeters[0], conjunction,
+                                        channel_greeters[1])
+    else:
+        greeters = channel_greeters[0]
+    return greeters
 
 
 # This welcomes the "person" passed to it.
 def welcome(newcomer):
     ircsock.send("PRIVMSG {0} :Welcome {1}!  The channel is pretty quiet "
                  "right now, so I though I'd say hello, and ping some people "
-                 "(like {2}) that you're here.  If no one responds for a "
+                 ",like {2}, that you're here.  If no one responds for a "
                  "while, try emailing us at hello@openhatch.org or just try "
                  "coming back later.  FYI, you're now on my list of known "
                  "nicknames, so I won't bother you again."
-                 "\n".format(channel, newcomer, channel_admins))
+                 "\n".format(channel, newcomer, greeter_string("and")))
 
 
 # Adds the current NewComer's nick to nicks.csv and known_nicks.
@@ -106,7 +121,7 @@ def get_welcome_regex(string_array):
 # It confirms that the attempt is allowed and then returns the requested value.
 # If the attempt is not allowed, a message is sent to help
 def wait_time_change():
-    for admin in channel_admins:
+    for admin in channel_greeters:
         if actor == admin:
             finder = search(r'\d\d*', search(r'--wait-time \d\d*', ircmsg)
                             .group())
@@ -114,8 +129,8 @@ def wait_time_change():
                          "seconds.\n".format(channel, actor, finder.group()))
             return finder.group()
     ircsock.send("PRIVMSG {0} :{1} you are not authorized to make that "
-                 "change. Please contact one of the channel admins {2} for "
-                 "assistance.\n".format(channel, actor, channel_admins))
+                 "change. Please contact one of the channel greeters, like {2}, for "
+                 "assistance.\n".format(channel, actor, greeter_string("or")))
 
 
 #################### Startup ####################
