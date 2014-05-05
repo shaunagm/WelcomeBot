@@ -12,7 +12,7 @@ staying in touch
 
 <code>bot.py</code> is the project's main file.  It uses the socket module to communicate and gathers a list of known IRC nicknames, stored in <code>nicks.csv</code>.  Its basic functions include:
 
-1. If someone enters the channel, the bot checks to see if they are a known nick.  If not, it adds them to a list of people to greet.  If no one else has spoken into the channel after 60 seconds, it greets them.  If someone else (not the new nick) speaks into the channel within 60 seconds, or if the nick is known, the bot remains silent.  The bots response text includes the nicks of channel maintainers/frequent contributors so that they are pinged.
+1. If someone enters the channel, the bot checks to see if they are a known nick.  If not, it adds them to a list of people to greet.  If no one else has spoken into the channel after a period of time, 60 seconds by default, it greets them.  If someone else (not the new nick) speaks into the channel within the set wait time, or if the nick is known, the bot remains silent.  The bots response text includes the nicks of channel maintainers/frequent contributors so that they are pinged.  Channel maintainers can change the wait time of the bot by using the following command in the irc channel: *Botname* --wait-time *new wait time in seconds*.
 2. If someone says hello to the bot, the bot says hello back.
 3. If someone asks the bot for information (via key phrases like "help", "faq", etc) the bot explains what it is and links to this repository.
 

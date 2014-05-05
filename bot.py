@@ -12,7 +12,7 @@ from threading import Thread
 from re import search
 
 # Some basic variables used to configure the bot.
-server = "irc.freenode.net" 
+server = "irc.freenode.net"
 channel = "#openhatch"
 botnick = 'WelcomeBot'
 channel_greeters = ['shauna', 'paulproteus', 'marktraceur']
@@ -127,7 +127,7 @@ def wait_time_change():
                             .group())
             ircsock.send("PRIVMSG {0} :{1} the wait time is changing to {2} "
                          "seconds.\n".format(channel, actor, finder.group()))
-            return finder.group()
+            return int(finder.group())
     ircsock.send("PRIVMSG {0} :{1} you are not authorized to make that "
                  "change. Please contact one of the channel greeters, like {2}, for "
                  "assistance.\n".format(channel, actor, greeter_string("or")))
