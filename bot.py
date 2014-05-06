@@ -8,8 +8,9 @@ import time
 import csv
 import Queue
 import random
+import re
 from threading import Thread
-from re import search
+
 
 # Some basic variables used to configure the bot.
 server = "irc.freenode.net"
@@ -18,6 +19,8 @@ botnick = 'WelcomeBot'
 channel_greeters = ['shauna', 'paulproteus', 'marktraceur']
 wait_time = 60  # amount of time after joining before bot replies to someone
 change_wait = botnick + " --wait-time "
+hello_list = [r'hello', r'hi', r'hey', r'yo', r'sup']
+help_list = [r'help', r'info', r'faq', r'explain yourself']
 
 
 #################### Classes ####################
@@ -106,14 +109,14 @@ def add_known_nick(new_known_nick):
         nickwriter.writerow([new_known_nick])
 
 
-# "I NEED NOTES!!!!", said the function.
-def get_welcome_regex(string_array):
-    #make regex case-insenstive
-    pattern = r'(?i)'
-    for s in string_array:
-        pattern += r'(?:[ :]'+s+r'(?:[ \.!\?,\)]|$))|'
-    #delete trailing '|'
+# Builds a regex that matches one of the options + (space) botnick.
+def get_regex(options):
+    pattern = "("
+    for s in options:
+        pattern += s
+        pattern += "|"
     pattern = pattern[:-1]
+    pattern += ").({})".format(botnick)
     return pattern
 
 
@@ -123,7 +126,7 @@ def get_welcome_regex(string_array):
 def wait_time_change():
     for admin in channel_greeters:
         if actor == admin:
-            finder = search(r'\d\d*', search(r'--wait-time \d\d*', ircmsg)
+            finder = re.search(r'\d\d*', re.search(r'--wait-time \d\d*', ircmsg)
                             .group())
             ircsock.send("PRIVMSG {0} :{1} the wait time is changing to {2} "
                          "seconds.\n".format(channel, actor, finder.group()))
@@ -164,10 +167,10 @@ t.start()
 # This is the array of NewComer objects that people who join are added to.
 newcomers = []
 
-hello_list = [r'hello', r'hi', r'hey', r'yo', r'sup']
-help_list = [r'help', r'info', r'faq', r'explain yourself']
-hello_pattern = get_welcome_regex(hello_list)
-help_pattern = get_welcome_regex(help_list)
+# Create a couple of regular expressions to use in the main loop
+# Basically, it creates a RE that matches something from the list + botnick
+hello_RE = re.compile(get_regex(hello_list), re.I)
+help_RE = re.compile(get_regex(help_list), re.I)
 
 
 #################### The Workhorse ####################
@@ -216,12 +219,10 @@ while 1:  # loop forever
 
         ##### Unwelcome functions #####
         # If someone talks to (or refers to) the bot.
-        if ircmsg.find(botnick) != -1 and ircmsg.find("PRIVMSG") != -1:
-            matchHello = search(hello_pattern, ircmsg)
-            matchHelp = search(help_pattern, ircmsg)
-            if matchHello:
+        if botnick.lower() and "PRIVMSG".lower() in ircmsg.lower():
+            if hello_RE.search(ircmsg):
                 bot_hello(random.choice(hello_list))
-            if matchHelp:
+            if help_RE.search(ircmsg):
                 bot_help()
 
         # If someone tries to change the wait time...
