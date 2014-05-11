@@ -38,6 +38,8 @@ class NewComer(object):
         def around_for(self):
             return int(time.time() - self.born)
 
+	def update_nick(self, new_nick):
+	    self.nick = new_nick
 
 #################### Functions! ####################
 # Joins specified channel.
@@ -216,6 +218,12 @@ while 1:  # loop forever
             for i in newcomers:  # and that person is on the newlist
                 if actor == i.nick:
                     newcomers.remove(i)   # remove them from the list
+
+	# If someone changes their nick...
+	if ircmsg.find("NICK") != -1:
+	    for i in newcomers:
+		if actor == i.nick:
+		    i.update_nick(ircmsg.split(":")[2])         
 
         ##### Unwelcome functions #####
         # If someone talks to (or refers to) the bot.
