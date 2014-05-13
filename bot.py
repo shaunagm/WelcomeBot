@@ -39,6 +39,7 @@ class NewComer(object):
             return int(time.time() - self.born)
 
 	def update_nick(self, new_nick):
+	    add_known_knick(self.nick)
 	    self.nick = new_nick
 
 #################### Functions! ####################
@@ -93,7 +94,7 @@ def greeter_string(conjunction):
 # This welcomes the "person" passed to it.
 def welcome(newcomer):
     ircsock.send("PRIVMSG {0} :Welcome {1}!  The channel is pretty quiet "
-                 "right now, so I though I'd say hello, and ping some people "
+                 "right now, so I thought I'd say hello, and ping some people "
                  "(like {2}) that you're here.  If no one responds for a "
                  "while, try emailing us at hello@openhatch.org or just try "
                  "coming back later.  FYI, you're now on my list of known "
