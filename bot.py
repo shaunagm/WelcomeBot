@@ -39,7 +39,7 @@ class NewComer(object):
             return int(time.time() - self.born)
 
 	def update_nick(self, new_nick):
-	    add_known_knick(self.nick)
+	    add_known_nick(self.nick)
 	    self.nick = new_nick
 
 #################### Functions! ####################
