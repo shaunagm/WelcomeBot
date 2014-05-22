@@ -1,5 +1,6 @@
 # Yay tests!
 
+import csv
 import unittest
 import newbot
 import time
@@ -39,11 +40,16 @@ class TestBotClass(unittest.TestCase):
     def test_add_nick_to_csv(self):
         bot = newbot.Bot('test_nicks.csv')
         bot.add_known_nick('Roger__')
-        self.assertEqual(bot.known_nicks, [['Alice'], ['Bob'], ['Roger']])
+        with open('test_nicks.csv', 'rb') as csv_file:
+            known_nicks = []
+            csv_file_data = csv.reader(csv_file, delimiter=',', quotechar='|')
+            for row in csv_file_data:
+                known_nicks.append(row)
+            self.assertEqual(known_nicks, [['Alice'], ['Bob'], ['Roger']])
 
     def tearDown(self):
         with open('test_nicks.csv', 'w') as csv_file:
-            csv_file.write('Alice\nBob')
+            csv_file.write('Alice\nBob\n')
 
 class TestNewComerClass(unittest.TestCase):
 
@@ -56,15 +62,15 @@ class TestNewComerClass(unittest.TestCase):
 
     def test_newcomer_init_born(self):
         newComer = newbot.NewComer('Baby', newbot.Bot())
-        time.sleep(0.01)        
-        self.assertAlmostEqual(newComer.born, time.time() - .01, places=2) 
+        time.sleep(0.01)
+        self.assertAlmostEqual(newComer.born, time.time() - .01, places=2)
 
     def test_add_newcomer_to_bot(self):
         pass
 
     def test_newcomer_around_for(self):
         newComer = newbot.NewComer('Shauna', newbot.Bot())
-        time.sleep(0.01)        
+        time.sleep(0.01)
         self.assertAlmostEqual(newComer.around_for(), .01, places=2)
 
 #
@@ -72,18 +78,18 @@ class TestNewComerClass(unittest.TestCase):
 #
 
 class TestProcessNewcomers(unittest.TestCase):
-    
+
     def setUp(self):
         self.bot = newbot.Bot('test_nicks.csv', wait_time=.1)
         newbot.NewComer('Harry', self.bot)
         newbot.NewComer('Hermione', self.bot)
         time.sleep(.15)
         newbot.NewComer('Ron', self.bot)
- 
+
     def test_check_new_newcomers(self):
         newbot.process_newcomers(self.bot, [i for i in self.bot.newcomers if i.around_for() > self.bot.wait_time], welcome=0)
         self.assertEqual(len(self.bot.newcomers), 1)
-    
+
     def test_check_new_known_nicks(self):
         newbot.process_newcomers(self.bot, [i for i in self.bot.newcomers if i.around_for() > self.bot.wait_time], welcome=0)
         self.assertEqual(self.bot.known_nicks,[['Alice'],['Bob'],['Harry'],['Hermione']])
@@ -92,7 +98,7 @@ class TestProcessNewcomers(unittest.TestCase):
 
     def tearDown(self):
         with open('test_nicks.csv', 'w') as csv_file:
-            csv_file.write('Alice\nBob')
+            csv_file.write('Alice\nBob\n')
 
 #
 # Not sure how to test check_messages.
