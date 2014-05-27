@@ -14,8 +14,8 @@ from threading import Thread
 
 # Some basic variables used to configure the bot.
 server = "irc.freenode.net"
-channel = "#openhatch"
-botnick = 'WelcomeBot'
+channel = "#openhatch-bots"
+botnick = 'RevisionBot'
 channel_greeters = ['shauna', 'paulproteus', 'marktraceur']
 wait_time = 60  # amount of time after joining before bot replies to someone
 change_wait = botnick + " --wait-time "
@@ -221,7 +221,8 @@ while 1:  # loop forever
                     newcomers.remove(i)   # remove them from the list
 
 	# If someone changes their nick...
-	if ircmsg.find("NICK") != -1:
+	if "NICK" in ircmsg.split(":")[1]:
+	    print "TRIGGER"
 	    for i in newcomers:
 		if actor == i.nick:
 		    i.update_nick(ircmsg.split(":")[2])         
