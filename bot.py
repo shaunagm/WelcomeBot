@@ -61,16 +61,16 @@ def pong():
 
 
 # This function responds to a user that inputs "Hello Mybot".
-def bot_hello(greeting):
-    ircsock.send("PRIVMSG {0} :{1} {2}\n".format(channel, greeting, actor))
+def bot_hello(greeting, send_to=channel):
+    ircsock.send("PRIVMSG {0} :{1} {2}\n".format(send_to, greeting, actor))
 
 
 # This function explains what the bot is when queried.
-def bot_help():
+def bot_help(send_to=channel):
     ircsock.send("PRIVMSG {} :I'm a bot!  I'm from here <https://github"
                  ".com/shaunagm/oh-irc-bot>.  You can change my behavior by "
                  "submitting a pull request or by talking to shauna"
-                 ".\n".format(channel))
+                 ".\n".format(send_to))
 
 
 # Returns a grammatically correct string of the channel_greeters.
@@ -221,9 +221,17 @@ while 1:  # loop forever
         # If someone talks to (or refers to) the bot.
         if botnick.lower() and "PRIVMSG".lower() in ircmsg.lower():
             if hello_RE.search(ircmsg):
-                bot_hello(random.choice(hello_list))
+		# If someone  starts a private conversation with bot
+                #/query WelcomeBotFix  Hello WelcomeBotFix
+                if ircmsg.find(channel) != -1:
+                    bot_hello(random.choice(hello_list))
+                else:
+                    bot_hello(random.choice(hello_list), actor)
             if help_RE.search(ircmsg):
-                bot_help()
+                if ircmsg.find(channel) != -1:
+                    bot_help()
+                else:
+                    bot_help(actor)
 
         # If someone tries to change the wait time...
         if ircmsg.find(change_wait) != -1:
