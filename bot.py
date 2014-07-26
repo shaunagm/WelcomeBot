@@ -14,8 +14,8 @@ from threading import Thread
 
 # Some basic variables used to configure the bot.
 server = "irc.freenode.net"
-channel = "#openhatch"
-botnick = 'WelcomeBot'
+channel = "#openhatch-bots"
+botnick = 'Alexbot'
 channel_greeters = ['shauna', 'paulproteus', 'marktraceur']
 wait_time = 60  # amount of time after joining before bot replies to someone
 change_wait = botnick + " --wait-time "
@@ -121,6 +121,25 @@ def get_regex(options):
     pattern = pattern[:-1]
     pattern += ").({})".format(botnick)
     return pattern
+    
+    
+# Check if user is in known_nicks
+# Separated into function for easier rule changes
+# Returns tuple of whether or not the nick was known, and what nick to add
+# Nick to add has been stripped of excess characters
+def nick_is_not_known(nick, known_nicks):
+    
+    #Remove trailing digits
+    while nick[-1] in "123456789":
+        nick = nick[:-1]
+    
+    # Ignore "" and "|*" suffixes
+    if [nick.replace("_", "")] not in known_nicks:
+        if [nick.split("|")[0]] not in known_nicks:
+            return True
+    
+    # Not in known_nicks
+    return False
 
 
 # This function is used to change the wait time from the channel.
@@ -210,7 +229,7 @@ while 1:  # loop forever
         # If someone joins #channel...
         if ircmsg.find("JOIN " + channel) != -1:
             if actor != botnick:  # and it is not the bot
-                if [actor.replace("_", "")] not in known_nicks:
+                if nick_is_not_known(actor, known_nicks):
                     if actor not in (i.nick for i in newcomers):
                         newcomers.append(NewComer(actor))
 
@@ -222,7 +241,6 @@ while 1:  # loop forever
 
 	# If someone changes their nick...
 	if "NICK" in ircmsg.split(":")[1]:
-	    print "TRIGGER"
 	    for i in newcomers:
 		if actor == i.nick:
 		    i.update_nick(ircmsg.split(":")[2])         
