@@ -14,8 +14,8 @@ from threading import Thread
 
 # Some basic variables used to configure the bot.
 server = "irc.freenode.net"
-channel = "#openhatch"
-botnick = 'WelcomeBot'
+channel = "#openhatch-bots"
+botnick = 'Alexbot'
 channel_greeters = ['shauna', 'paulproteus', 'marktraceur']
 wait_time = 60  # amount of time after joining before bot replies to someone
 change_wait = botnick + " --wait-time "
@@ -38,6 +38,9 @@ class NewComer(object):
         def around_for(self):
             return int(time.time() - self.born)
 
+	def update_nick(self, new_nick):
+	    add_known_nick(self.nick)
+	    self.nick = new_nick
 
 #################### Functions! ####################
 # Joins specified channel.
@@ -91,7 +94,7 @@ def greeter_string(conjunction):
 # This welcomes the "person" passed to it.
 def welcome(newcomer):
     ircsock.send("PRIVMSG {0} :Welcome {1}!  The channel is pretty quiet "
-                 "right now, so I though I'd say hello, and ping some people "
+                 "right now, so I thought I'd say hello, and ping some people "
                  "(like {2}) that you're here.  If no one responds for a "
                  "while, try emailing us at hello@openhatch.org or just try "
                  "coming back later.  FYI, you're now on my list of known "
@@ -118,6 +121,25 @@ def get_regex(options):
     pattern = pattern[:-1]
     pattern += ").({})".format(botnick)
     return pattern
+    
+    
+# Check if user is in known_nicks
+# Separated into function for easier rule changes
+# Returns tuple of whether or not the nick was known, and what nick to add
+# Nick to add has been stripped of excess characters
+def nick_is_not_known(nick, known_nicks):
+    
+    #Remove trailing digits
+    while nick[-1] in "123456789":
+        nick = nick[:-1]
+    
+    # Ignore "" and "|*" suffixes
+    if [nick.replace("_", "")] not in known_nicks:
+        if [nick.split("|")[0]] not in known_nicks:
+            return True
+    
+    # Not in known_nicks
+    return False
 
 
 # This function is used to change the wait time from the channel.
@@ -207,7 +229,7 @@ while 1:  # loop forever
         # If someone joins #channel...
         if ircmsg.find("JOIN " + channel) != -1:
             if actor != botnick:  # and it is not the bot
-                if [actor.replace("_", "")] not in known_nicks:
+                if nick_is_not_known(actor, known_nicks):
                     if actor not in (i.nick for i in newcomers):
                         newcomers.append(NewComer(actor))
 
@@ -216,6 +238,12 @@ while 1:  # loop forever
             for i in newcomers:  # and that person is on the newlist
                 if actor == i.nick:
                     newcomers.remove(i)   # remove them from the list
+
+	# If someone changes their nick...
+	if "NICK" in ircmsg.split(":")[1]:
+	    for i in newcomers:
+		if actor == i.nick:
+		    i.update_nick(ircmsg.split(":")[2])         
 
         ##### Unwelcome functions #####
         # If someone talks to (or refers to) the bot.
