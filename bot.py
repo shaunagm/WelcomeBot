@@ -222,7 +222,6 @@ while 1:  # loop forever
 
 	# If someone changes their nick...
 	if "NICK" in ircmsg.split(":")[1]:
-	    print "TRIGGER"
 	    for i in newcomers:
 		if actor == i.nick:
 		    i.update_nick(ircmsg.split(":")[2])         
