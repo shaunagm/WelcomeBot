@@ -38,9 +38,6 @@ class NewComer(object):
         def around_for(self):
             return int(time.time() - self.born)
 
-	def update_nick(self, new_nick):
-	    add_known_nick(self.nick)
-	    self.nick = new_nick
 
 #################### Functions! ####################
 # Joins specified channel.
@@ -127,7 +124,7 @@ def get_regex(options):
 # Separated into function for easier rule changes
 # Returns tuple of whether or not the nick was known, and what nick to add
 # Nick to add has been stripped of excess characters
-def nick_is_not_known(nick, known_nicks):
+def nick_is_not_known(nick):
     
     #Remove trailing digits
     while nick[-1] in "123456789":
@@ -229,7 +226,7 @@ while 1:  # loop forever
         # If someone joins #channel...
         if ircmsg.find("JOIN " + channel) != -1:
             if actor != botnick:  # and it is not the bot
-                if nick_is_not_known(actor, known_nicks):
+                if nick_is_not_known(actor):
                     if actor not in (i.nick for i in newcomers):
                         newcomers.append(NewComer(actor))
 
@@ -237,13 +234,8 @@ while 1:  # loop forever
         if ircmsg.find("PART " + channel) != -1 or ircmsg.find("QUIT") != -1:
             for i in newcomers:  # and that person is on the newlist
                 if actor == i.nick:
-                    newcomers.remove(i)   # remove them from the list
+                    newcomers.remove(i)   # remove them from the list        
 
-	# If someone changes their nick...
-	if "NICK" in ircmsg.split(":")[1]:
-	    for i in newcomers:
-		if actor == i.nick:
-		    i.update_nick(ircmsg.split(":")[2])         
 
         ##### Unwelcome functions #####
         # If someone talks to (or refers to) the bot.
