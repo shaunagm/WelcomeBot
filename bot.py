@@ -3,12 +3,13 @@
 #########################################################################
 
 # Import some necessary libraries.
-import socket 
+import socket
 import time
 import csv
 import Queue
 import random
 import re
+from sys import exc_info
 from threading import Thread
 
 
@@ -57,7 +58,7 @@ def msg_handler():
 
 # Responds to server Pings.
 def pong():
-    ircsock.send("PONG :pingis\n")  
+    ircsock.send("PONG :pingis\n")
 
 
 # This function responds to a user that inputs "Hello Mybot".
@@ -126,13 +127,13 @@ def get_regex(options):
 def wait_time_change():
     for admin in channel_greeters:
         if actor == admin:
-            finder = re.search(r'\d\d*', re.search(r'--wait-time \d\d*', ircmsg)
-                            .group())
+            finder = re.search(r'\d\d*', re.search(r'--wait-time \d\d*',
+                                                   ircmsg).group())
             ircsock.send("PRIVMSG {0} :{1} the wait time is changing to {2} "
                          "seconds.\n".format(channel, actor, finder.group()))
             return int(finder.group())
-    ircsock.send("PRIVMSG {0} :{1} you are not authorized to make that "
-                 "change. Please contact one of the channel greeters, like {2}, for "
+    ircsock.send("PRIVMSG {0} :{1} you are not authorized to make that change"
+                 ". Please contact one of the channel greeters, like {2}, for "
                  "assistance.\n".format(channel, actor, greeter_string("or")))
 
 
@@ -191,7 +192,15 @@ while 1:  # loop forever
         # get the next msg in the queue
         ircmsg = q.get()
         # and get the nick of the msg sender
-        actor = ircmsg.split(":")[1].split("!")[0]
+        try:
+            actor = ircmsg.split(":")[1].split("!")[0]
+        except IndexError:
+            err_log = open('./error.log', 'a')
+            err_log.write('\nError occurred: {0}.\nircmsg was: {1}.\nSystem '
+                          'error was: {2}'
+                          '\n'.format(time.strftime('%x %X %Z'),
+                          ircmsg, exc_info()[0]))
+            err_log.close()
 
         ##### Welcome functions #####
         # If someone has spoken into the channel...
