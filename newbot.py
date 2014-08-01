@@ -1,13 +1,7 @@
 # Welcome to WelcomeBot.  Find source, documentation, etc here: https://github.com/shaunagm/WelcomeBot/  Licensed https://creativecommons.org/licenses/by-sa/2.0/
 
 # Import some necessary libraries.
-import socket 
-import sys
-import time
-import csv
-import Queue
-import random
-import re
+import socket, sys, time, csv, Queue, random, re, pdb
 from threading import Thread
 
 # Some basic variables used to configure the bot.
@@ -49,14 +43,28 @@ class Bot(object):
 
 # Defines a newcomer object    
 class NewComer(object):
-    
-        def __init__(self, nick, bot):
-            self.nick = nick
-            self.born = time.time()
-            bot.newcomers.append(self)
 
-        def around_for(self):
-            return time.time() - self.born
+    def __init__(self, nick, bot):
+        self.nick = nick
+        self.born = time.time()
+        bot.newcomers.append(self)
+
+    def around_for(self):
+        return time.time() - self.born
+            
+            
+#########################
+### FAKE FUNCTION WE ARE REMOVING LATER ### 
+#########################
+
+class fake_ircsock(object):
+    
+    def send(self, msg):
+        self.sent_message = msg
+
+def fake_irc_start():
+    global ircsock
+    ircsock = fake_ircsock()    
 
 
 #########################
@@ -65,8 +73,7 @@ class NewComer(object):
 
 # Creates a socket that will be used to send and receive messages,
 # then connects the socket to an IRC server and joins the channel.
-def irc_start():
-    global ircsock 
+def irc_start(): # pragma: no cover  (this excludes this function from testing)
     ircsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ircsock.connect((server, 6667))  # Here we connect to server using port 6667.
     ircsock.send("USER {0} {0} {0} :This is http://openhatch.org/'s greeter bot"
@@ -75,16 +82,16 @@ def irc_start():
     ircsock.send("JOIN {} \n".format(channel)) # Joins channel
 
 # Creates a separate thread for incoming messages (to combat concurrency issues)
-def thread_start():
+def thread_start():  # pragma: no cover  (this excludes this function from testing)
     global q
-    q = Queue.Queue()  # Creates a Queue that will hold the incoming messages.
-    t = Thread(target=msg_handler)  # Creates a separate thread running msg_hander function (below)
+    q = queue.Queue()  # Creates a Queue that will hold the incoming messages.
+    t = Thread(target=msg_handler())  # Creates a separate thread running msg_hander function (below)
     t.daemon = True
     t.start()
 
 # Reads the messages from the server and adds them to the Queue and prints
 # them to the console. This function will be run in a thread, see below.
-def msg_handler():
+def msg_handler():  # pragma: no cover  (this excludes this function from testing)
     while True:
         new_msg = ircsock.recv(2048)  # receive data from the server
         new_msg = new_msg.strip('\n\r')  # removing any unnecessary linebreaks
@@ -106,7 +113,7 @@ def get_regex(options):
 ### General Functions ###
 #########################
 
-# This welcomes the "person" passed to it.
+# Welcomes the "person" passed to it.
 def welcome_nick(newcomer):
     ircsock.send("PRIVMSG {0} :Welcome {1}!  The channel is pretty quiet "
                  "right now, so I though I'd say hello, and ping some people "
@@ -114,10 +121,10 @@ def welcome_nick(newcomer):
                  "while, try emailing us at hello@openhatch.org or just try "
                  "coming back later.  FYI, you're now on my list of known "
                  "nicknames, so I won't bother you again."
-                 "\n".format(channel, newcomer, greeter_string("and")))
+                 "\n".format(channel, newcomer, greeter_string("and", channel_greeters)))
 
 # Checks and manages the status of newcomers.
-def process_newcomers(bot, newcomerlist=[], welcome=1):
+def process_newcomers(bot, newcomerlist, welcome=1):
     for person in newcomerlist:
         if welcome == 1:
             welcome_nick(person.nick)
@@ -125,17 +132,19 @@ def process_newcomers(bot, newcomerlist=[], welcome=1):
         bot.newcomers.remove(person) 
 
 # Checks for messages.
-def check_messages():
-    ircmsg = q.get() # get the next msg in the queue
-    actor = ircmsg.split(":")[1].split("!")[0] # and get the nick of the msg sender
-    return ircmsg, actor  # Assumes that the above parsing works.  :/
+def parse_messages(ircmsg):
+    try:
+        actor = ircmsg.split(":")[1].split("!")[0] # and get the nick of the msg sender
+        return ircmsg, actor
+    except:
+        return None, None
 
-# This function parses messages and responds to them appropriately.
+# Parses messages and responds to them appropriately.
 def message_response(bot, ircmsg, actor):
 
     # if someone other than a newcomer speaks into the channel
     if ircmsg.find("PRIVMSG " + channel) != -1 and actor not in [i.nick for i in bot.newcomers]:
-        process_newcomers(bot.newcomers,welcome=0)   # Process/check newcomers without welcoming them
+        process_newcomers(bot,bot.newcomers,welcome=0)   # Process/check newcomers without welcoming them
 
     # if someone (other than the bot) joins the channel
     if ircmsg.find("JOIN " + channel) != -1 and actor != botnick:
@@ -168,11 +177,11 @@ def message_response(bot, ircmsg, actor):
 ### Bot Response Functions (called by message_response()) ###
 #############################################################
 
-# This function responds to a user that inputs "Hello Mybot".
+# Responds to a user that inputs "Hello Mybot".
 def bot_hello(greeting, actor):
     ircsock.send("PRIVMSG {0} :{1} {2}\n".format(channel, greeting, actor))
 
-# This function explains what the bot is when queried.
+# Explains what the bot is when queried.
 def bot_help():
     ircsock.send("PRIVMSG {} :I'm a bot!  I'm from here <https://github"
                  ".com/shaunagm/oh-irc-bot>.  You can change my behavior by "
@@ -180,22 +189,20 @@ def bot_help():
                  ".\n".format(channel))
 
 # Returns a grammatically correct string of the channel_greeters.
-def greeter_string(conjunction):
-    greeters = ""
-    if len(channel_greeters) > 2:
-        for name in channel_greeters[:-1]:
-            greeters += "{}, ".format(name)
-        greeters += "{0} {1}".format(conjunction, channel_greeters[-1])
-    elif len(channel_greeters) == 2:
-        greeters = "{0} {1} {2}".format(channel_greeters[0], conjunction,
-                                        channel_greeters[1])
+def greeter_string(conjunction, greeters):
+    greeterstring = ""
+    if len(greeters) > 2:
+        for name in greeters[:-1]:
+            greeterstring += "{}, ".format(name)
+        greeterstring += "{0} {1}".format(conjunction, greeters[-1])
+    elif len(greeters) == 2:
+        greeterstring = "{0} {1} {2}".format(greeters[0], conjunction,
+                                        greeters[1])
     else:
-        greeters = channel_greeters[0]
-    return greeters
+        greeterstring = greeters[0]
+    return greeterstring
 
-# This function is used to change the wait time from the channel.
-# It confirms that the attempt is allowed and then returns the requested value.
-# If the attempt is not allowed, a message is sent to help
+# Changes the wait time from the channel.
 def wait_time_change(actor, ircmsg):
     for admin in channel_greeters:
         if actor == admin:
@@ -206,7 +213,7 @@ def wait_time_change(actor, ircmsg):
             return int(finder.group())
     ircsock.send("PRIVMSG {0} :{1} you are not authorized to make that "
                  "change. Please contact one of the channel greeters, like {2}, for "
-                 "assistance.\n".format(channel, actor, greeter_string("or")))
+                 "assistance.\n".format(channel, actor, greeter_string("or", channel_greeters)))
 
 # Responds to server Pings.
 def pong():
@@ -218,13 +225,15 @@ def pong():
 ##########################
 
 def main():
-    irc_start()
+    irc_start() 
     thread_start()
     WelcomeBot = Bot()
     while 1:  # Loop forever
         process_newcomers(WelcomeBot, [i for i in WelcomeBot.newcomers if i.around_for() > WelcomeBot.wait_time])
         if q.empty() == 0:  # If the queue is not empty...
-            message_response(WelcomeBot, *check_messages())  # Checks for messages, gets a message text and actor, and responds
+            ircmsg, actor = parse_messages(q.get())  # parse the next msg in the queue
+            if ircmsg is not None: # If we were able to parse it
+                message_response(WelcomeBot, ircmsg, actor)  # Respond to the parsed message
 
 if __name__ == "__main__": # This line tells the interpreter to only execute main() if the program is being run, not imported.
     sys.exit(main())
