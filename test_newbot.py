@@ -100,6 +100,16 @@ class TestNewComerClass(unittest.TestCase):
         time.sleep(0.01)
         self.assertAlmostEqual(newComer.around_for(), .01, places=2)
 
+class TestJoinIRC(unittest.TestCase):
+
+    def setUp(self):
+        self.ircsock = fake_irc_start()
+        
+    def test_sent_messages(self):
+        newbot.join_irc(self.ircsock)
+        expected = ["USER WelcomeBot2 WelcomeBot2 WelcomeBot2 :This is http://openhatch.org/'s greeter bot.\n", 'NICK WelcomeBot2\n', 'JOIN #openhatch-bots \n']
+        self.assertEqual(self.ircsock.sent_messages,expected)
+
 class TestProcessNewcomers(unittest.TestCase):
 
     def setUp(self):
