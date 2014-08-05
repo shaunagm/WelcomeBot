@@ -51,20 +51,6 @@ class NewComer(object):
 
     def around_for(self):
         return time.time() - self.born
-            
-            
-#########################
-### FAKE FUNCTION WE ARE REMOVING LATER ### 
-#########################
-
-class fake_ircsock(object):
-    
-    def send(self, msg):
-        self.sent_message = msg
-
-def fake_irc_start():
-    ircsock = fake_ircsock()
-    return ircsock    
 
 
 #########################

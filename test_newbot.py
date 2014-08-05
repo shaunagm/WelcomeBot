@@ -6,6 +6,20 @@ import newbot
 import time
 import pdb
 
+#########################
+### FAKE IRCSOCK  ### 
+#########################
+
+class fake_ircsock(object):
+    
+    def send(self, msg):
+        self.sent_message = msg
+
+def fake_irc_start():
+    ircsock = fake_ircsock()
+    return ircsock   
+
+
 class TestBotClass(unittest.TestCase):
 
     def setUp(self):
@@ -82,7 +96,7 @@ class TestProcessNewcomers(unittest.TestCase):
         newbot.NewComer('Hermione', self.bot)
         time.sleep(.15)
         newbot.NewComer('Ron', self.bot)
-        self.ircsock = newbot.fake_irc_start()
+        self.ircsock = fake_irc_start()
 
     def test_check_new_newcomers(self):
         newbot.process_newcomers(self.bot, [i for i in self.bot.newcomers if i.around_for() > self.bot.wait_time], ircsock=self.ircsock, welcome=0)
@@ -115,7 +129,7 @@ class TestMessageResponse(unittest.TestCase):
     def setUp(self):
         self.bot = newbot.Bot('test_nicks.csv')
         newbot.NewComer('Chappe', self.bot)
-        self.ircsock = newbot.fake_irc_start()
+        self.ircsock = fake_irc_start()
 
     def test_newcomer_speaking(self):
         newbot.message_response(self.bot,"~q@r.m.us PRIVMSG #openhatch-bots :hah","Chappe", ircsock=self.ircsock)  # Standard message by newcomer
@@ -156,12 +170,10 @@ class TestMessageResponse(unittest.TestCase):
         self.assertEqual(self.ircsock.sent_message, "PRIVMSG #openhatch-bots :Impostor you are not authorized to make that change. Please contact one of the channel greeters, like shauna, for assistance.\n")
         
     def test_pong(self):
-        newbot.fake_irc_start()
         newbot.message_response(self.bot,"PING :","Shauna",ircsock=self.ircsock)   # Replace this with actual ping message
         self.assertEqual(self.ircsock.sent_message,"PONG :pingis\n")
         
     def test_bad_pong(self):
-        newbot.fake_irc_start()
         newbot.message_response(self.bot,"PING!!! :","Shauna",ircsock=self.ircsock)   # Replace this with actual ping message
         self.assertFalse(hasattr(self.ircsock, 'sent_message'))  # Fails because sent_message is never actually created
 
