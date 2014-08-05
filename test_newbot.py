@@ -92,8 +92,8 @@ class TestProcessNewcomers(unittest.TestCase):
         self.assertEqual(self.bot.known_nicks,[['Alice'],['Bob'],['Harry'],['Hermione']])
         
     def test_welcome_nick(self):
-        newbot.fake_irc_start()
-        newbot.process_newcomers(self.bot, [i for i in self.bot.newcomers if i.around_for() > self.bot.wait_time], welcome=1)
+        ircsock = newbot.fake_irc_start()
+        newbot.process_newcomers(bot=self.bot, newcomerlist=[i for i in self.bot.newcomers if i.around_for() > self.bot.wait_time], ircsock=ircsock, welcome=1)
         self.assertEqual(newbot.ircsock.sent_message, "PRIVMSG #openhatch-bots :Welcome Hermione!  The channel is pretty quiet right now, so I though I'd say hello, and ping some people (like shauna) that you're here.  If no one responds for a while, try emailing us at hello@openhatch.org or just try coming back later.  FYI, you're now on my list of known nicknames, so I won't bother you again.\n")
         
     def tearDown(self):
