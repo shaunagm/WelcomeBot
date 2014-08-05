@@ -11,9 +11,21 @@ import pdb
 #########################
 
 class fake_ircsock(object):
+
+    def __init__(self):
+        self.sent_messages = []
     
     def send(self, msg):
-        self.sent_message = msg
+        self.sent_messages.append(msg)
+
+    def sent_message(self):
+        return self.sent_messages[-1]
+        
+    def has_sent_message(self):
+        if self.sent_messages:
+            return True
+        else:
+            return False
 
 def fake_irc_start():
     ircsock = fake_ircsock()
@@ -108,7 +120,7 @@ class TestProcessNewcomers(unittest.TestCase):
         
     def test_welcome_nick(self):
         newbot.process_newcomers(bot=self.bot, newcomerlist=[i for i in self.bot.newcomers if i.around_for() > self.bot.wait_time], ircsock=self.ircsock, welcome=1)
-        self.assertEqual(self.ircsock.sent_message, "PRIVMSG #openhatch-bots :Welcome Hermione!  The channel is pretty quiet right now, so I though I'd say hello, and ping some people (like shauna) that you're here.  If no one responds for a while, try emailing us at hello@openhatch.org or just try coming back later.  FYI, you're now on my list of known nicknames, so I won't bother you again.\n")
+        self.assertEqual(self.ircsock.sent_message(), "PRIVMSG #openhatch-bots :Welcome Hermione!  The channel is pretty quiet right now, so I though I'd say hello, and ping some people (like shauna) that you're here.  If no one responds for a while, try emailing us at hello@openhatch.org or just try coming back later.  FYI, you're now on my list of known nicknames, so I won't bother you again.\n")
         
     def tearDown(self):
         with open('test_nicks.csv', 'w') as csv_file:
@@ -153,29 +165,29 @@ class TestMessageResponse(unittest.TestCase):
         
     def test_hello(self):
         newbot.message_response(self.bot,"PRIVMSG sup WelcomeBot2","Shauna", ircsock=self.ircsock)     # The botnick may also be changed.  :(
-        self.assertTrue(hasattr(self.ircsock, 'sent_message'))  # Fails because sent_message is never actually created
-        self.assertIn(self.ircsock.sent_message, ["PRIVMSG #openhatch-bots :hello Shauna\n", "PRIVMSG #openhatch-bots :hi Shauna\n", "PRIVMSG #openhatch-bots :hey Shauna\n", "PRIVMSG #openhatch-bots :yo Shauna\n", "PRIVMSG #openhatch-bots :sup Shauna\n"])
+        self.assertTrue(self.ircsock.has_sent_message())
+        self.assertIn(self.ircsock.sent_message(), ["PRIVMSG #openhatch-bots :hello Shauna\n", "PRIVMSG #openhatch-bots :hi Shauna\n", "PRIVMSG #openhatch-bots :hey Shauna\n", "PRIVMSG #openhatch-bots :yo Shauna\n", "PRIVMSG #openhatch-bots :sup Shauna\n"])
         
     def test_help(self):
         newbot.message_response(self.bot,"PRIVMSG info WelcomeBot2","Shauna", ircsock=self.ircsock)     # The botnick may also be changed.  :(
-        self.assertTrue(hasattr(self.ircsock, 'sent_message'))  # Fails because sent_message is never actually created
-        self.assertEqual(self.ircsock.sent_message, "PRIVMSG #openhatch-bots :I'm a bot!  I'm from here <https://github.com/shaunagm/oh-irc-bot>.  You can change my behavior by submitting a pull request or by talking to shauna.\n")
+        self.assertTrue(self.ircsock.has_sent_message())
+        self.assertEqual(self.ircsock.sent_message(), "PRIVMSG #openhatch-bots :I'm a bot!  I'm from here <https://github.com/shaunagm/oh-irc-bot>.  You can change my behavior by submitting a pull request or by talking to shauna.\n")
         
     def test_wait_time_from_admin(self):
         newbot.message_response(self.bot,"WelcomeBot2 --wait-time 40","shauna",ircsock=self.ircsock)     # Channel-greeters may also be changed.  :(
-        self.assertEqual(self.ircsock.sent_message, "PRIVMSG #openhatch-bots :shauna the wait time is changing to 40 seconds.\n")
+        self.assertEqual(self.ircsock.sent_message(), "PRIVMSG #openhatch-bots :shauna the wait time is changing to 40 seconds.\n")
  
     def test_wait_time_from_non_admin(self):  
         newbot.message_response(self.bot,"WelcomeBot2 --wait-time 40","Impostor",ircsock=self.ircsock)     # Channel-greeters may also be changed.  :(  
-        self.assertEqual(self.ircsock.sent_message, "PRIVMSG #openhatch-bots :Impostor you are not authorized to make that change. Please contact one of the channel greeters, like shauna, for assistance.\n")
+        self.assertEqual(self.ircsock.sent_message(), "PRIVMSG #openhatch-bots :Impostor you are not authorized to make that change. Please contact one of the channel greeters, like shauna, for assistance.\n")
         
     def test_pong(self):
         newbot.message_response(self.bot,"PING :","Shauna",ircsock=self.ircsock)   # Replace this with actual ping message
-        self.assertEqual(self.ircsock.sent_message,"PONG :pingis\n")
+        self.assertEqual(self.ircsock.sent_message(),"PONG :pingis\n")
         
     def test_bad_pong(self):
         newbot.message_response(self.bot,"PING!!! :","Shauna",ircsock=self.ircsock)   # Replace this with actual ping message
-        self.assertFalse(hasattr(self.ircsock, 'sent_message'))  # Fails because sent_message is never actually created
+        self.assertFalse(self.ircsock.has_sent_message())   
 
     def tearDown(self):
         with open('test_nicks.csv', 'w') as csv_file:
