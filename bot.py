@@ -119,6 +119,25 @@ def get_regex(options):
     pattern = pattern[:-1]
     pattern += ").({})".format(botnick)
     return pattern
+    
+    
+# Check if user is in known_nicks
+# Separated into function for easier rule changes
+# Returns tuple of whether or not the nick was known, and what nick to add
+# Nick to add has been stripped of excess characters
+def nick_is_not_known(nick):
+    
+    #Remove trailing digits
+    while nick[-1] in "123456789":
+        nick = nick[:-1]
+    
+    # Ignore "" and "|*" suffixes
+    if [nick.replace("_", "")] not in known_nicks:
+        if [nick.split("|")[0]] not in known_nicks:
+            return True
+    
+    # Not in known_nicks
+    return False
 
 
 # This function is used to change the wait time from the channel.
@@ -216,7 +235,7 @@ while 1:  # loop forever
         # If someone joins #channel...
         if ircmsg.find("JOIN " + channel) != -1:
             if actor != botnick:  # and it is not the bot
-                if [actor.replace("_", "")] not in known_nicks:
+                if nick_is_not_known(actor):
                     if actor not in (i.nick for i in newcomers):
                         newcomers.append(NewComer(actor))
 
@@ -224,7 +243,8 @@ while 1:  # loop forever
         if ircmsg.find("PART " + channel) != -1 or ircmsg.find("QUIT") != -1:
             for i in newcomers:  # and that person is on the newlist
                 if actor == i.nick:
-                    newcomers.remove(i)   # remove them from the list
+                    newcomers.remove(i)   # remove them from the list        
+
 
         ##### Unwelcome functions #####
         # If someone talks to (or refers to) the bot.
