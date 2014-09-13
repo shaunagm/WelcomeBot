@@ -1,7 +1,7 @@
 # Welcome to WelcomeBot.  Find source, documentation, etc here: https://github.com/shaunagm/WelcomeBot/  Licensed https://creativecommons.org/licenses/by-sa/2.0/
 
 # Import some necessary libraries.
-import socket, sys, time, csv, Queue, random, re, pdb
+import socket, sys, time, csv, Queue, random, re, pdb, select
 from threading import Thread
 
 # Some basic variables used to configure the bot.
@@ -62,28 +62,21 @@ class NewComer(object):
 def irc_start(): # pragma: no cover  (this excludes this function from testing)
     ircsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ircsock.connect((server, 6667))  # Here we connect to server using port 6667.
+    return ircsock
+    
+def join_irc(ircsock):
     ircsock.send("USER {0} {0} {0} :This is http://openhatch.org/'s greeter bot"
              ".\n".format(botnick))  # bot authentication
     ircsock.send("NICK {}\n".format(botnick))  # Assign the nick to the bot.
     ircsock.send("JOIN {} \n".format(channel)) # Joins channel
-    return ircsock
-
-# Creates a separate thread for incoming messages (to combat concurrency issues)
-def thread_start(ircsock):  # pragma: no cover  (this excludes this function from testing)
-    global q
-    q = queue.Queue()  # Creates a Queue that will hold the incoming messages.
-    t = Thread(target=msg_handler(ircsock))  # Creates a separate thread running msg_hander function (below)
-    t.daemon = True
-    t.start()
 
 # Reads the messages from the server and adds them to the Queue and prints
 # them to the console. This function will be run in a thread, see below.
 def msg_handler(ircsock):  # pragma: no cover  (this excludes this function from testing)
-    while True:
-        new_msg = ircsock.recv(2048)  # receive data from the server
-        new_msg = new_msg.strip('\n\r')  # removing any unnecessary linebreaks
-        q.put(new_msg)  # put in queue for main loop to read
-        print(new_msg) #### Potentially make this a log instead?
+    new_msg = ircsock.recv(2048)  # receive data from the server
+    new_msg = new_msg.strip('\n\r')  # removing any unnecessary linebreaks
+    print(new_msg) #### Potentially make this a log instead?
+    return new_msg
 
 # Called by bot on startup.  Builds a regex that matches one of the options + (space) botnick.
 def get_regex(options):
@@ -213,12 +206,14 @@ def pong(ircsock):
 
 def main():
     ircsock = irc_start() 
-    thread_start(ircsock)
+    join_irc(ircsock)
     WelcomeBot = Bot()
     while 1:  # Loop forever
-        process_newcomers(WelcomeBot, ircsock, [i for i in WelcomeBot.newcomers if i.around_for() > WelcomeBot.wait_time])
-        if q.empty() == 0:  # If the queue is not empty...
-            ircmsg, actor = parse_messages(q.get())  # parse the next msg in the queue
+        ready_to_read, b, c = select.select([ircsock],[],[], 1)  # ignore b&c, doesn't allow keywords
+        if ready_to_read:
+            ircmsg = msg_handler(ircsock)
+            process_newcomers(WelcomeBot, [i for i in WelcomeBot.newcomers if i.around_for() > WelcomeBot.wait_time],ircsock)
+            ircmsg, actor = parse_messages(ircmsg)  # parse the next msg in the queue
             if ircmsg is not None: # If we were able to parse it
                 message_response(WelcomeBot, ircmsg, actor, ircsock)  # Respond to the parsed message
 
