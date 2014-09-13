@@ -92,9 +92,6 @@ class TestNewComerClass(unittest.TestCase):
         time.sleep(0.01)
         self.assertAlmostEqual(newComer.born, time.time() - .01, places=2)
 
-    def test_add_newcomer_to_bot(self):
-        pass
-
     def test_newcomer_around_for(self):
         newComer = newbot.NewComer('Shauna', newbot.Bot())
         time.sleep(0.01)
