@@ -115,7 +115,7 @@ def process_newcomers(bot, newcomerlist, ircsock, welcome=1):
 def parse_messages(ircmsg):
     try:
         actor = ircmsg.split(":")[1].split("!")[0] # and get the nick of the msg sender
-        return ircmsg, actor
+        return " ".join(ircmsg.split()), actor
     except:
         return None, None
 
