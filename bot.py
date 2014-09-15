@@ -130,6 +130,12 @@ def message_response(bot, ircmsg, actor, ircsock):
     if ircmsg.find("JOIN " + channel) != -1 and actor != botnick:
         if actor.replace("_", "") not in bot.known_nicks and (i.nick for i in bot.newcomers):  # And they're new
             NewComer(actor, bot)
+        
+    # if someone changes their nick while still in newcomers update that nick   
+    if ircmsg.find("NICK :") != -1 and actor != botnick:        
+        for i in bot.newcomers: # if that person was in the newlist
+            if i.nick == actor:
+                i.nick = ircmsg.split(":")[2] # update to new nick
 
     # If someone parts or quits the #channel...
     if ircmsg.find("PART " + channel) != -1 or ircmsg.find("QUIT") != -1:
