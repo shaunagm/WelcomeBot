@@ -6,9 +6,9 @@ from threading import Thread
 
 # Some basic variables used to configure the bot.
 server = "irc.freenode.net"
-channel = "#openhatch-bots"  # Please use #openhatch-bots rather than #openhatch for testing
+channel = "#openhatch"  # Please use #openhatch-bots rather than #openhatch for testing
 botnick = "WelcomeBot"
-channel_greeters = ['shauna'] #, 'paulproteus', 'marktraceur']
+channel_greeters = ['shauna', 'paulproteus', 'marktraceur']
 hello_list = [r'hello', r'hi', r'hey', r'yo', r'sup'] 
 help_list = [r'help', r'info', r'faq', r'explain yourself']
 
@@ -20,7 +20,7 @@ help_list = [r'help', r'info', r'faq', r'explain yourself']
 # Defines a bot
 class Bot(object):
 
-    def __init__(self, nick_source='nicks.csv', wait_time=5):
+    def __init__(self, nick_source='nicks.csv', wait_time=60):
         self.nick_source = nick_source
         self.wait_time = wait_time
         self.known_nicks = []
