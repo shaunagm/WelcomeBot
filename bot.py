@@ -6,9 +6,9 @@ from threading import Thread
 
 # Some basic variables used to configure the bot.
 server = "irc.freenode.net"
-channel = "#openhatch"  # Please use #openhatch-bots rather than #openhatch for testing
+channel = "#openhatch-bots"  # Please use #openhatch-bots rather than #openhatch for testing
 botnick = "WelcomeBot"
-channel_greeters = ['shauna', 'paulproteus', 'marktraceur']
+channel_greeters = ['shauna'] #, 'paulproteus', 'marktraceur']
 hello_list = [r'hello', r'hi', r'hey', r'yo', r'sup'] 
 help_list = [r'help', r'info', r'faq', r'explain yourself']
 
@@ -20,13 +20,14 @@ help_list = [r'help', r'info', r'faq', r'explain yourself']
 # Defines a bot
 class Bot(object):
 
-    def __init__(self, nick_source='nicks.csv', wait_time=60):
+    def __init__(self, nick_source='nicks.csv', wait_time=5):
         self.nick_source = nick_source
         self.wait_time = wait_time
         self.known_nicks = []
         with open(self.nick_source, 'rb') as csv_file:
             csv_file_data = csv.reader(csv_file, delimiter=',', quotechar='|')
             for row in csv_file_data:
+                row = clean_nick(row[0])    # Sends nicks to remove unnecessary decorators. Hacked to deal with list-of-string format. :(
                 self.known_nicks.append(row)
         self.newcomers = []
         self.hello_regex = re.compile(get_regex(hello_list), re.I)  # Regexed version of hello list
@@ -115,9 +116,19 @@ def process_newcomers(bot, newcomerlist, ircsock, welcome=1):
 def parse_messages(ircmsg):
     try:
         actor = ircmsg.split(":")[1].split("!")[0] # and get the nick of the msg sender
+        actor = clean_nick(actor)
         return " ".join(ircmsg.split()), actor
     except:
         return None, None
+        
+# Cleans a nickname of decorators/identifiers
+def clean_nick(actor):
+    actor = actor.replace("_", "")  # Strip out trailing _ characters
+    while(actor[-1]) in "1234567890": # Remove trailing numbers
+        actor = actor[:-1]
+    if ('|' in actor):  # Remove location specifiers, etc.
+        actor = actor.split('|')[0]
+    return actor
 
 # Parses messages and responds to them appropriately.
 def message_response(bot, ircmsg, actor, ircsock):
@@ -135,7 +146,7 @@ def message_response(bot, ircmsg, actor, ircsock):
     if ircmsg.find("NICK :") != -1 and actor != botnick:        
         for i in bot.newcomers: # if that person was in the newlist
             if i.nick == actor:
-                i.nick = ircmsg.split(":")[2] # update to new nick
+                i.nick = clean_nick(ircmsg.split(":")[2]) # update to new nick (and clean up the nick)
 
     # If someone parts or quits the #channel...
     if ircmsg.find("PART " + channel) != -1 or ircmsg.find("QUIT") != -1:
