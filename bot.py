@@ -128,7 +128,7 @@ def message_response(bot, ircmsg, actor, ircsock):
 
     # if someone (other than the bot) joins the channel
     if ircmsg.find("JOIN " + channel) != -1 and actor != botnick:
-        if actor.replace("_", "") not in bot.known_nicks and (i.nick for i in bot.newcomers):  # And they're new
+        if [actor.replace("_", "")] not in bot.known_nicks + [i.nick for i in bot.newcomers]:  # And they're new
             NewComer(actor, bot)
         
     # if someone changes their nick while still in newcomers update that nick   
@@ -215,11 +215,11 @@ def main():
     join_irc(ircsock)
     WelcomeBot = Bot()
     while 1:  # Loop forever
-        ready_to_read, b, c = select.select([ircsock],[],[], 1)  # ignore b&c, doesn't allow keywords
+        ready_to_read, b, c = select.select([ircsock],[],[], 1)  # b&c are ignored here
+        process_newcomers(WelcomeBot, [i for i in WelcomeBot.newcomers if i.around_for() > WelcomeBot.wait_time],ircsock)
         if ready_to_read:
-            ircmsg = msg_handler(ircsock)
-            process_newcomers(WelcomeBot, [i for i in WelcomeBot.newcomers if i.around_for() > WelcomeBot.wait_time],ircsock)
-            ircmsg, actor = parse_messages(ircmsg)  # parse the next msg in the queue
+            ircmsg = msg_handler(ircsock) # gets message from ircsock
+            ircmsg, actor = parse_messages(ircmsg)  # parses it or returns None
             if ircmsg is not None: # If we were able to parse it
                 message_response(WelcomeBot, ircmsg, actor, ircsock)  # Respond to the parsed message
 
