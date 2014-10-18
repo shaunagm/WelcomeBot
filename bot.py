@@ -28,7 +28,7 @@ class Bot(object):
             csv_file_data = csv.reader(csv_file, delimiter=',', quotechar='|')
             for row in csv_file_data:
                 row = clean_nick(row[0])    # Sends nicks to remove unnecessary decorators. Hacked to deal with list-of-string format. :(
-                self.known_nicks.append(row)
+                self.known_nicks.append([row])
         self.newcomers = []
         self.hello_regex = re.compile(get_regex(hello_list), re.I)  # Regexed version of hello list
         self.help_regex = re.compile(get_regex(help_list), re.I)  # Regexed version of help list
