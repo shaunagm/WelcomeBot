@@ -123,11 +123,12 @@ def parse_messages(ircmsg):
         
 # Cleans a nickname of decorators/identifiers
 def clean_nick(actor):
-    actor = actor.replace("_", "")  # Strip out trailing _ characters
-    while(actor[-1]) in "1234567890": # Remove trailing numbers
-        actor = actor[:-1]
-    if ('|' in actor):  # Remove location specifiers, etc.
-        actor = actor.split('|')[0]
+    if actor:   # In case an empty string gets passed
+        actor = actor.replace("_", "")  # Strip out trailing _ characters
+        while(actor[-1]) in "1234567890": # Remove trailing numbers
+            actor = actor[:-1]
+        if ('|' in actor):  # Remove location specifiers, etc.
+            actor = actor.split('|')[0]
     return actor
 
 # Parses messages and responds to them appropriately.
