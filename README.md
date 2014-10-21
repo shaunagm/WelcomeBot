@@ -16,6 +16,10 @@ staying in touch
 2. If someone says hello to the bot, the bot says hello back.
 3. If someone asks the bot for information (via key phrases like "help", "faq", etc) the bot explains what it is and links to this repository.
 
+The repository also contains <code>test_bot.py</code>, which is a set of automated tests for the bot.  To learn more about these, see __Testing__ below.  <code>test_nicks.csv</code>, which is the set of nicks used for the automated tests.
+
+There are also some miscellaneous files that you can ignore for now.  We'll clean them up eventually. :)
+
 ## Setting up
 
 To run the bot:
@@ -27,9 +31,33 @@ To run the bot:
 
 If you run into setup difficulties, ping shauna on freenode (via the #openhatch channel is preferred) and/or leave an issue in this repository's issue tracker.
 
+In order to keep the bot continuously running, we put it on a server using the following command:
+
+<code>nohup python bot.py &</code>
+
+[Nohup](http://en.wikipedia.org/wiki/Nohup) keeps it from terminating when we close the terminal and <code>&</code> keeps it from printing the IRC messages to the terminal.
+
+## Testing
+
+We use [Python unittest](https://docs.python.org/2/library/unittest.html) to test the bot, and [Coverage](http://nedbatchelder.com/code/coverage/) to look at the test coverage.  
+
+When running tests, use this command:
+
+<code>python -m unittest test_bot</code>
+
+The output should tell you how many tests you ran and if any of them are failures.
+
+When creating tests, you can use the following series of commands to see whether your test is testing the code you want it to test:
+
+<code>
+./bin/coverage run test_bot.py
+</code>
+
+_Note_: You will likely need to install coverage.  The above command assumes you have installed it to a virtual environment.  If you haven't, the command to use is: <code>coverage run test_bot.py</code>
+
 ## How to help
 
-The [issue tracker](https://github.com/shaunagm/oh-irc-bot/issues?state=open) lists improvements we want to make.  Please feel free to submit pull requests to address these issues.  If you're not familiar with how to do this using github, see [here](https://openhatch.org/wiki/Git_Basics).  You can also ask me for clarification (again, I am shauna on the #openhatch IRC.)  
+The [issue tracker](https://github.com/shaunagm/oh-irc-bot/issues?state=open) lists improvements we want to make.  I strongly encourage you to contact me and say hello before you get started (I am shauna on the #openhatch IRC).  Please feel free to submit pull requests to address these issues.  If you're not familiar with how to do this using github, see [here](https://openhatch.org/wiki/Git_Basics).  You can also always ask me for help or  clarification.  
 
 ## Credit
 
