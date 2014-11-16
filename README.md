@@ -21,7 +21,7 @@ The repository also contains <code>test_bot.py</code>, which is a set of automat
 There are also some miscellaneous files that you can ignore for now.  We'll clean them up eventually. :)
 
 ## Setting up
-Currently, the bot is only compatibility with Python 2.x.
+Currently, the bot is only compatible up to Python 2.7.
 
 To run the bot:
 
