@@ -69,6 +69,9 @@ def join_irc(ircsock):
     ircsock.send("USER {0} {0} {0} :This is http://openhatch.org/'s greeter bot"
              ".\n".format(botnick))  # bot authentication
     ircsock.send("NICK {}\n".format(botnick))  # Assign the nick to the bot.
+    with open("password.txt", 'r') as f:
+        password = f.read()
+    ircsock.send("PRIVMSG {} {} {} {}".format("NickServ","IDENTIFY", botnick, password))
     ircsock.send("JOIN {} \n".format(channel)) # Joins channel
 
 # Reads the messages from the server and adds them to the Queue and prints
@@ -217,7 +220,7 @@ def wait_time_change(actor, ircmsg, ircsock):
 def pong(ircsock):
     ircsock.send("PONG :pingis\n") 
 
-
+    
 ##########################
 ### The main function. ###
 ##########################
