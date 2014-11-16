@@ -1,6 +1,6 @@
 ## What is this?
 
-oh-irc-bot (or "WelcomeBot", its IRC nick) is a bot for welcoming people into the #openhatch irc channel 
+oh-irc-bot (or "WelcomeBot", its IRC nick) is a bot for welcoming people into the #openhatch irc channel
 when no one is paying attention.  The goals are to:
 
 1. alert community members when someone new enters the room and says hello (either by using their nick
@@ -21,6 +21,7 @@ The repository also contains <code>test_bot.py</code>, which is a set of automat
 There are also some miscellaneous files that you can ignore for now.  We'll clean them up eventually. :)
 
 ## Setting up
+Currently, the bot is only compatibility with Python 2.x.
 
 To run the bot:
 
