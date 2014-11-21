@@ -45,7 +45,7 @@ class TestBotClass(unittest.TestCase):
         self.assertEqual(bot.known_nicks, [['Alice'], ['Bob']])
 
     def test_wait_time(self):
-        self.assertEqual(self.bot.wait_time, 60)
+        self.assertEqual(self.bot.wait_time, botcode.wait_time)
 
     def test_custom_wait_time(self):
         bot = botcode.Bot(wait_time=30)
@@ -101,10 +101,11 @@ class TestJoinIRC(unittest.TestCase):
 
     def setUp(self):
         self.ircsock = fake_irc_start()
+        self.bot = botcode.Bot()
         
     def test_sent_messages(self):
         botcode.join_irc(self.ircsock)
-        expected = ["USER WelcomeBot2 WelcomeBot2 WelcomeBot2 :This is http://openhatch.org/'s greeter bot.\n", 'NICK WelcomeBot2\n', 'JOIN #openhatch-bots \n']
+        expected = ["USER {} {} {} :This is http://openhatch.org/'s greeter bot.\n".format(botcode.botnick, botcode.botnick, botcode.botnick), 'NICK {}\n'.format(botcode.botnick), 'JOIN {} \n'.format(botcode.channel)]
         self.assertEqual(self.ircsock.sent_messages,expected)
 
 class TestProcessNewcomers(unittest.TestCase):
@@ -127,7 +128,7 @@ class TestProcessNewcomers(unittest.TestCase):
         
     def test_welcome_nick(self):
         botcode.process_newcomers(bot=self.bot, newcomerlist=[i for i in self.bot.newcomers if i.around_for() > self.bot.wait_time], ircsock=self.ircsock, welcome=1)
-        self.assertEqual(self.ircsock.sent_message(), "PRIVMSG #openhatch-bots :Welcome Hermione!  The channel is pretty quiet right now, so I though I'd say hello, and ping some people (like shauna) that you're here.  If no one responds for a while, try emailing us at hello@openhatch.org or just try coming back later.  FYI, you're now on my list of known nicknames, so I won't bother you again.\n")
+        self.assertEqual(self.ircsock.sent_message(), "PRIVMSG {0} :Welcome Hermione!  The channel is pretty quiet right now, so I thought I'd say hello, and ping some people (like {1}) that you're here.  If no one responds for a while, try emailing us at hello@openhatch.org or just try coming back later.  FYI, you're now on my list of known nicknames, so I won't bother you again.\n".format(botcode.channel,botcode.greeter_string(botcode.channel_greeters)))
         
     def tearDown(self):
         with open('test_nicks.csv', 'w') as csv_file:
@@ -151,42 +152,42 @@ class TestMessageResponse(unittest.TestCase):
         self.ircsock = fake_irc_start()
 
     def test_newcomer_speaking(self):
-        botcode.message_response(self.bot,"~q@r.m.us PRIVMSG #openhatch-bots :hah","Chappe", ircsock=self.ircsock)  # Standard message by newcomer
+        botcode.message_response(self.bot,"~q@r.m.us PRIVMSG {} :hah".format(botcode.channel),"Chappe", ircsock=self.ircsock)  # Standard message by newcomer
         nicklist = [i.nick for i in self.bot.newcomers]   # Makes a list of newcomers nicks for easy asserting
         self.assertEqual(nicklist, ['Chappe'])
 
     def test_oldtimer_speaking(self):
-        botcode.message_response(self.bot,"~q@r.m.us PRIVMSG #openhatch-bots :hah","Alice", ircsock=self.ircsock)  # Standard message by oldtimer
+        botcode.message_response(self.bot,"~q@r.m.us PRIVMSG {} :hah".format(botcode.channel),"Alice", ircsock=self.ircsock)  # Standard message by oldtimer
         nicklist = [i.nick for i in self.bot.newcomers]   # Makes a list of newcomers nicks for easy asserting
         self.assertEqual(nicklist, [])
         
     def test_join(self):
-        botcode.message_response(self.bot,"JOIN #openhatch-bots right now!","Shauna", ircsock=self.ircsock)   # Replace with actual ping message ALSO argh the channel variable might mess things up if folks change it, which they very well might :/  (Also true for tests below.)  I think maybe use the format.() style that is used for wait_change etc
+        botcode.message_response(self.bot,"JOIN {} right now!".format(botcode.channel),"Shauna", ircsock=self.ircsock)   # Replace with actual ping message 
         self.assertEqual(self.bot.newcomers[1].nick,'Shauna')
  
     def test_part(self):
-        botcode.message_response(self.bot,"JOIN #openhatch-bots right now!","Shauna", ircsock=self.ircsock)   # Replace with actual ping message ALSO argh the channel variable might mess things up if folks change it, which they very well might :/  (Also true for tests below.)
+        botcode.message_response(self.bot,"JOIN {} right now!".format(botcode.channel),"Shauna", ircsock=self.ircsock)   # Replace with actual ping message
         self.assertEqual(len(self.bot.newcomers), 2)
-        botcode.message_response(self.bot,"PART #openhatch-bots","Shauna", ircsock=self.ircsock)   # Replace with actual ping message ALSO argh the channel variable might mess things up :/
+        botcode.message_response(self.bot,"PART {}".format(botcode.channel),"Shauna", ircsock=self.ircsock)   # Replace with actual ping message
         self.assertEqual(len(self.bot.newcomers), 1)  
         
     def test_hello(self):
-        botcode.message_response(self.bot,"PRIVMSG sup WelcomeBot2","Shauna", ircsock=self.ircsock)     # The botnick may also be changed.  :(
+        botcode.message_response(self.bot,"PRIVMSG sup {}".format(botcode.botnick),"Shauna", ircsock=self.ircsock)
         self.assertTrue(self.ircsock.has_sent_message())
-        self.assertIn(self.ircsock.sent_message(), ["PRIVMSG #openhatch-bots :hello Shauna\n", "PRIVMSG #openhatch-bots :hi Shauna\n", "PRIVMSG #openhatch-bots :hey Shauna\n", "PRIVMSG #openhatch-bots :yo Shauna\n", "PRIVMSG #openhatch-bots :sup Shauna\n"])
+        self.assertIn(self.ircsock.sent_message(), ["PRIVMSG {} :hello Shauna\n".format(botcode.channel), "PRIVMSG {} :hi Shauna\n".format(botcode.channel), "PRIVMSG {} :hey Shauna\n".format(botcode.channel), "PRIVMSG {} :yo Shauna\n".format(botcode.channel), "PRIVMSG {} :sup Shauna\n".format(botcode.channel)])
         
     def test_help(self):
-        botcode.message_response(self.bot,"PRIVMSG info WelcomeBot2","Shauna", ircsock=self.ircsock)     # The botnick may also be changed.  :(
+        botcode.message_response(self.bot,"PRIVMSG info {}".format(botcode.botnick),"Shauna", ircsock=self.ircsock)
         self.assertTrue(self.ircsock.has_sent_message())
-        self.assertEqual(self.ircsock.sent_message(), "PRIVMSG #openhatch-bots :I'm a bot!  I'm from here <https://github.com/shaunagm/oh-irc-bot>.  You can change my behavior by submitting a pull request or by talking to shauna.\n")
+        self.assertEqual(self.ircsock.sent_message(), "PRIVMSG {} :I'm a bot!  I'm from here <https://github.com/shaunagm/oh-irc-bot>.  You can change my behavior by submitting a pull request or by talking to shauna.\n".format(botcode.channel))
         
     def test_wait_time_from_admin(self):
-        botcode.message_response(self.bot,"WelcomeBot2 --wait-time 40","shauna",ircsock=self.ircsock)     # Channel-greeters may also be changed.  :(
-        self.assertEqual(self.ircsock.sent_message(), "PRIVMSG #openhatch-bots :shauna the wait time is changing to 40 seconds.\n")
+        botcode.message_response(self.bot,"{} --wait-time 40".format(botcode.botnick),"shauna",ircsock=self.ircsock)     # Channel-greeters may also be changed.  :(
+        self.assertEqual(self.ircsock.sent_message(), "PRIVMSG {} :shauna the wait time is changing to 40 seconds.\n".format(botcode.channel))
  
     def test_wait_time_from_non_admin(self):  
-        botcode.message_response(self.bot,"WelcomeBot2 --wait-time 40","Impostor",ircsock=self.ircsock)     # Channel-greeters may also be changed.  :(  
-        self.assertEqual(self.ircsock.sent_message(), "PRIVMSG #openhatch-bots :Impostor you are not authorized to make that change. Please contact one of the channel greeters, like shauna, for assistance.\n")
+        botcode.message_response(self.bot,"{} --wait-time 40".format(botcode.botnick),"Impostor",ircsock=self.ircsock)     # Channel-greeters may also be changed.  :(  
+        self.assertEqual(self.ircsock.sent_message(), "PRIVMSG {0} :Impostor you are not authorized to make that change. Please contact one of the channel greeters, like {1}, for assistance.\n".format(botcode.channel,botcode.greeter_string(botcode.channel_greeters)))
         
     def test_pong(self):
         botcode.message_response(self.bot,"PING :","Shauna",ircsock=self.ircsock)   # Replace this with actual ping message
@@ -206,15 +207,15 @@ class TestGreeterString(unittest.TestCase):
         self.bot = botcode.Bot('test_nicks.csv')
     
     def test_one_greeter(self):     
-       greeterstring = botcode.greeter_string("and", ['shauna'])
+       greeterstring = botcode.greeter_string(['shauna'])
        self.assertEqual(greeterstring, "shauna")
        
     def test_two_greeters(self):        
-       greeters = botcode.greeter_string("and", ['shauna','sauna'])
+       greeters = botcode.greeter_string(['shauna','sauna'])
        self.assertEqual(greeters, "shauna and sauna")
 
     def test_three_greeters(self):  
-       greeters = botcode.greeter_string("and", ['shauna','sauna','megafauna'])
+       greeters = botcode.greeter_string(['shauna','sauna','megafauna'])
        self.assertEqual(greeters, "shauna, sauna, and megafauna")
 
 
