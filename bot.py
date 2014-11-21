@@ -9,6 +9,7 @@ server = "irc.freenode.net"
 channel = "#openhatch"  # Please use #openhatch-bots rather than #openhatch for testing
 botnick = "WelcomeBot"
 channel_greeters = ['shauna', 'paulproteus', 'marktraceur']
+wait_time = 60
 hello_list = [r'hello', r'hi', r'hey', r'yo', r'sup'] 
 help_list = [r'help', r'info', r'faq', r'explain yourself']
 
@@ -20,7 +21,7 @@ help_list = [r'help', r'info', r'faq', r'explain yourself']
 # Defines a bot
 class Bot(object):
 
-    def __init__(self, nick_source='nicks.csv', wait_time=60):
+    def __init__(self, nick_source='nicks.csv', wait_time=wait_time):
         self.nick_source = nick_source
         self.wait_time = wait_time
         self.known_nicks = []
@@ -103,7 +104,7 @@ def welcome_nick(newcomer, ircsock):
                  "while, try emailing us at hello@openhatch.org or just try "
                  "coming back later.  FYI, you're now on my list of known "
                  "nicknames, so I won't bother you again."
-                 "\n".format(channel, newcomer, greeter_string("and", channel_greeters)))
+                 "\n".format(channel, newcomer, greeter_string(channel_greeters)))
 
 # Checks and manages the status of newcomers.
 def process_newcomers(bot, newcomerlist, ircsock, welcome=1):
@@ -188,15 +189,14 @@ def bot_help(ircsock):
                  ".\n".format(channel))
 
 # Returns a grammatically correct string of the channel_greeters.
-def greeter_string(conjunction, greeters):
+def greeter_string(greeters):
     greeterstring = ""
     if len(greeters) > 2:
         for name in greeters[:-1]:
             greeterstring += "{}, ".format(name)
-        greeterstring += "{0} {1}".format(conjunction, greeters[-1])
+        greeterstring += "and {}".format(greeters[-1])
     elif len(greeters) == 2:
-        greeterstring = "{0} {1} {2}".format(greeters[0], conjunction,
-                                        greeters[1])
+        greeterstring = "{0} and {1}".format(greeters[0], greeters[1])
     else:
         greeterstring = greeters[0]
     return greeterstring
@@ -212,7 +212,7 @@ def wait_time_change(actor, ircmsg, ircsock):
             return int(finder.group())
     ircsock.send("PRIVMSG {0} :{1} you are not authorized to make that "
                  "change. Please contact one of the channel greeters, like {2}, for "
-                 "assistance.\n".format(channel, actor, greeter_string("or", channel_greeters)))
+                 "assistance.\n".format(channel, actor, greeter_string(channel_greeters)))
 
 # Responds to server Pings.
 def pong(ircsock):
@@ -238,4 +238,5 @@ def main():
 
 if __name__ == "__main__": # This line tells the interpreter to only execute main() if the program is being run, not imported.
     sys.exit(main())
+
 
