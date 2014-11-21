@@ -71,7 +71,7 @@ This class and function are "mock" objects that allow us to test the parts of ou
         ircsock.connect((server, 6667))  # Here we connect to server using port 6667.
         return ircsock
 
-As you can see in the comment, this function is excluded from testing.  It's actually excluded by virtue of not being called in `test_bot.py` but the statement `pragma: no cover` excludes it from the [coverage tool](http://nedbatchelder.com/code/coverage/) as well (see more [below](#Using coverage to inspect tests)).  In any case, the real `ircstart()` uses the socket library to establish a connection with the IRC server and returns all details of that connection in an object called `ircsock`.
+As you can see in the comment, this function is excluded from testing.  It's actually excluded by virtue of not being called in `test_bot.py` but the statement `pragma: no cover` excludes it from the [coverage tool](http://nedbatchelder.com/code/coverage/) as well (see more [below](https://github.com/shaunagm/WelcomeBot/blob/master/docs/testing.md#using-coverage-to-inspect-tests)).  In any case, the real `ircstart()` uses the socket library to establish a connection with the IRC server and returns all details of that connection in an object called `ircsock`.
 
 When we looked at how our various functions use `ircsock`, we decided that the main thing we wanted to test is whether or not it was sending messages, and what those messages were.  So our fake ircsock has functions which keep track of messages:
 
