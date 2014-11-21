@@ -6,7 +6,6 @@ from threading import Thread
 import ConfigParser
 
 # Some basic variables used to configure the bot.
-channel_greeters = ['shauna', 'paulproteus', 'marktraceur']
 hello_list = [r'hello', r'hi', r'hey', r'yo', r'sup'] 
 help_list = [r'help', r'info', r'faq', r'explain yourself']
 
@@ -66,6 +65,7 @@ def parsesettings():
 		for option in parser.options(section):
 			settings[option] = parser.get(section, option)
 
+	print(settings)
 	return settings
 
 # Creates a socket that will be used to send and receive messages,
@@ -105,7 +105,7 @@ def get_regex(options, botnick):
 #########################
 
 # Welcomes the "person" passed to it.
-def welcome_nick(newcomer, ircsock, channel):
+def welcome_nick(newcomer, ircsock, channel, channel_greeters):
     ircsock.send("PRIVMSG {0} :Welcome {1}!  The channel is pretty quiet "
                  "right now, so I thought I'd say hello, and ping some people "
                  "(like {2}) that you're here.  If no one responds for a "
@@ -115,10 +115,10 @@ def welcome_nick(newcomer, ircsock, channel):
                  "\n".format(channel, newcomer, greeter_string("and", channel_greeters)))
 
 # Checks and manages the status of newcomers.
-def process_newcomers(bot, newcomerlist, ircsock, welcome=1, channel):
+def process_newcomers(bot, newcomerlist, ircsock, channel, greeters, welcome=1):
     for person in newcomerlist:
         if welcome == 1:
-            welcome_nick(person.nick, ircsock, channel)
+            welcome_nick(person.nick, ircsock, channel, greeters)
         bot.add_known_nick(person.nick)
         bot.newcomers.remove(person) 
 
@@ -142,19 +142,19 @@ def clean_nick(actor):
     return actor
 
 # Parses messages and responds to them appropriately.
-def message_response(bot, ircmsg, actor, ircsock, channel):
+def message_response(bot, ircmsg, actor, ircsock, channel, greeters):
 
     # if someone other than a newcomer speaks into the channel
     if ircmsg.find("PRIVMSG " + channel) != -1 and actor not in [i.nick for i in bot.newcomers]:
-        process_newcomers(bot,bot.newcomers, ircsock, welcome=0, channel)   # Process/check newcomers without welcoming them
+        process_newcomers(bot,bot.newcomers, ircsock, channel, welcome=0)   # Process/check newcomers without welcoming them
 
     # if someone (other than the bot) joins the channel
-    if ircmsg.find("JOIN " + channel) != -1 and actor != botnick:
+    if ircmsg.find("JOIN " + channel) != -1 and actor != bot.botnick:
         if [actor.replace("_", "")] not in bot.known_nicks + [i.nick for i in bot.newcomers]:  # And they're new
             NewComer(actor, bot)
         
     # if someone changes their nick while still in newcomers update that nick   
-    if ircmsg.find("NICK :") != -1 and actor != botnick:        
+    if ircmsg.find("NICK :") != -1 and actor != bot.botnick:        
         for i in bot.newcomers: # if that person was in the newlist
             if i.nick == actor:
                 i.nick = clean_nick(ircmsg.split(":")[2]) # update to new nick (and clean up the nick)
@@ -174,7 +174,7 @@ def message_response(bot, ircmsg, actor, ircsock, channel):
 
     # If someone tries to change the wait time...
     if ircmsg.find(bot.botnick + " --wait-time ") != -1:
-        bot.wait_time = wait_time_change(actor, ircmsg, ircsock, channel)  # call this to check and change it
+        bot.wait_time = wait_time_change(actor, ircmsg, ircsock, channel, greeters)  # call this to check and change it
 
     # If the server pings us then we've got to respond!
     if ircmsg.find("PING :") != -1:
@@ -211,7 +211,7 @@ def greeter_string(conjunction, greeters):
     return greeterstring
 
 # Changes the wait time from the channel.
-def wait_time_change(actor, ircmsg, ircsock, channel):
+def wait_time_change(actor, ircmsg, ircsock, channel, channel_greeters):
     for admin in channel_greeters:
         if actor == admin:
             finder = re.search(r'\d\d*', re.search(r'--wait-time \d\d*', ircmsg)
@@ -239,12 +239,12 @@ def main():
     WelcomeBot = Bot(settings["botnick"])
     while 1:  # Loop forever
         ready_to_read, b, c = select.select([ircsock],[],[], 1)  # b&c are ignored here
-        process_newcomers(WelcomeBot, [i for i in WelcomeBot.newcomers if i.around_for() > WelcomeBot.wait_time],ircsock)
+        process_newcomers(WelcomeBot, [i for i in WelcomeBot.newcomers if i.around_for() > WelcomeBot.wait_time],ircsock,settings["channel"], settings["channel_greeters"].split(","))
         if ready_to_read:
             ircmsg = msg_handler(ircsock) # gets message from ircsock
             ircmsg, actor = parse_messages(ircmsg)  # parses it or returns None
             if ircmsg is not None: # If we were able to parse it
-                message_response(WelcomeBot, ircmsg, actor, ircsock, settings["channel"])  # Respond to the parsed message
+                message_response(WelcomeBot, ircmsg, actor, ircsock, settings["channel"], settings["channel_greeters"].split(","))  # Respond to the parsed message
 
 if __name__ == "__main__": # This line tells the interpreter to only execute main() if the program is being run, not imported.
     sys.exit(main())
