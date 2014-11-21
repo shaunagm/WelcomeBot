@@ -47,6 +47,7 @@ class NewComer(object):
 
     def __init__(self, nick, bot):
         self.nick = nick
+	self.clean_nick = clean_nick(self.nick)
         self.born = time.time()
         bot.newcomers.append(self)
 
@@ -109,14 +110,13 @@ def process_newcomers(bot, newcomerlist, ircsock, welcome=1):
     for person in newcomerlist:
         if welcome == 1:
             welcome_nick(person.nick, ircsock)
-        bot.add_known_nick(person.nick)
+        bot.add_known_nick(person.clean_nick)
         bot.newcomers.remove(person) 
 
 # Checks for messages.
 def parse_messages(ircmsg):
     try:
         actor = ircmsg.split(":")[1].split("!")[0] # and get the nick of the msg sender
-        actor = clean_nick(actor)
         return " ".join(ircmsg.split()), actor
     except:
         return None, None
@@ -135,24 +135,25 @@ def clean_nick(actor):
 def message_response(bot, ircmsg, actor, ircsock):
 
     # if someone other than a newcomer speaks into the channel
-    if ircmsg.find("PRIVMSG " + channel) != -1 and actor not in [i.nick for i in bot.newcomers]:
+    if ircmsg.find("PRIVMSG " + channel) != -1 and clean_nick(actor) not in [i.clean_nick for i in bot.newcomers]:
         process_newcomers(bot,bot.newcomers, ircsock, welcome=0)   # Process/check newcomers without welcoming them
 
     # if someone (other than the bot) joins the channel
     if ircmsg.find("JOIN " + channel) != -1 and actor != botnick:
-        if [actor.replace("_", "")] not in bot.known_nicks + [i.nick for i in bot.newcomers]:  # And they're new
+        if [clean_nick(actor)] not in bot.known_nicks + [i.clean_nick for i in bot.newcomers]:  # And they're new
             NewComer(actor, bot)
         
     # if someone changes their nick while still in newcomers update that nick   
     if ircmsg.find("NICK :") != -1 and actor != botnick:        
         for i in bot.newcomers: # if that person was in the newlist
             if i.nick == actor:
-                i.nick = clean_nick(ircmsg.split(":")[2]) # update to new nick (and clean up the nick)
+                i.nick = ircmsg.split(":")[2] # update to new nick (and clean up the nick)
+		i.clean_nick = clean_nick(i.nick)
 
     # If someone parts or quits the #channel...
     if ircmsg.find("PART " + channel) != -1 or ircmsg.find("QUIT") != -1:
         for i in bot.newcomers:  # and that person is on the newlist
-            if actor == i.nick:
+            if clean_nick(actor) == i.clean_nick:
                 bot.newcomers.remove(i)   # remove them from the list
 
     # If someone talks to (or refers to) the bot.
