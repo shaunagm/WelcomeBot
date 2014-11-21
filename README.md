@@ -18,7 +18,7 @@ staying in touch
 
 The repository also contains <code>test_bot.py</code>, which is a set of automated tests for the bot.  To learn more about these, see __Testing__ below.  <code>test_nicks.csv</code>, which is the set of nicks used for the automated tests.
 
-There are also some miscellaneous files that you can ignore for now.  We'll clean them up eventually. :)
+Finally, we have a docs folder which contains tutorial-style instructions for various concepts used by WelcomeBot.  Currently there is one tutorial, for unit testing.  [Check it out!](https://github.com/shaunagm/WelcomeBot/docs/testing.md)
 
 ## Setting up
 Currently, the bot is only compatible up to Python 2.7.
