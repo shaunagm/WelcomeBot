@@ -3,11 +3,12 @@
 # Import some necessary libraries.
 import socket, sys, time, csv, Queue, random, re, pdb, select
 from threading import Thread
+import ConfigParser
 
 # Some basic variables used to configure the bot.
 server = "irc.freenode.net"
-channel = "#openhatch"  # Please use #openhatch-bots rather than #openhatch for testing
-botnick = "WelcomeBot"
+channel = "#openhatch-bots"  # Please use #openhatch-bots rather than #openhatch for testing
+botnick = "ParserWelcomeBot"
 channel_greeters = ['shauna', 'paulproteus', 'marktraceur']
 hello_list = [r'hello', r'hi', r'hey', r'yo', r'sup'] 
 help_list = [r'help', r'info', r'faq', r'explain yourself']
@@ -57,6 +58,27 @@ class NewComer(object):
 #########################
 ### Startup Functions ### 
 #########################
+
+# Parse configuration file and load settings
+def parsesettings():
+	parser = ConfigParser.ConfigParser()
+	parser.read("settings.ini")
+	settings = {}
+	for section in parser.sections():
+		for option in parser.options(section):
+			settings[option] = parser.get(section, option)
+
+	# Needs to be a cleaner way to do this
+	global channel
+	global botnick
+	global server
+	global channel_greeter
+	global hello_list
+	global help_lis
+
+	channel = settings["channel"]
+	botnick = settings["botnick"]
+	server  = settings["server"]
 
 # Creates a socket that will be used to send and receive messages,
 # then connects the socket to an IRC server and joins the channel.
@@ -223,6 +245,7 @@ def pong(ircsock):
 ##########################
 
 def main():
+    parsesettings()
     ircsock = irc_start() 
     join_irc(ircsock)
     WelcomeBot = Bot()
