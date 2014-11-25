@@ -1,12 +1,6 @@
 ## What is this?
 
-oh-irc-bot (or "WelcomeBot", its IRC nick) is a bot for welcoming people into the #openhatch irc channel
-when no one is paying attention.  The goals are to:
-
-1. alert community members when someone new enters the room and says hello (either by using their nick
-in a response, or by sending a private message)
-2. help a person to feel welcome even when there's no one around, and providing more information about
-staying in touch
+oh-irc-bot (or "WelcomeBot", its IRC nick) is a bot for welcoming people into the #openhatch irc channel when no one is paying attention.  It has two main goals: first, to alert community members when someone new enters the room and says hello (either by using their nick in a response, or by sending a private message).  Second, it helps the new person to feel welcome even when there's no one around, and provides more information to them about staying in touch.
 
 ## Basic Structure
 
@@ -16,11 +10,12 @@ staying in touch
 2. If someone says hello to the bot, the bot says hello back.
 3. If someone asks the bot for information (via key phrases like "help", "faq", etc) the bot explains what it is and links to this repository.
 
-The repository also contains <code>test_bot.py</code>, which is a set of automated tests for the bot.  To learn more about these, see __Testing__ below.  <code>test_nicks.csv</code>, which is the set of nicks used for the automated tests.
+The repository contains <code>test_bot.py</code>, which is a set of automated tests for the bot.  To learn more about these, see __Testing__ below or [the testing tutorial](https://github.com/shaunagm/WelcomeBot/blob/master/docs/testing.md).  It also contains <code>test_nicks.csv</code>, the set of nicks used for the automated tests.
 
-Finally, we have a docs folder which contains tutorial-style instructions for various concepts used by WelcomeBot.  Currently there is one tutorial, for unit testing.  [Check it out!](https://github.com/shaunagm/WelcomeBot/blob/master/docs/testing.md)
+Finally, we have a docs folder which contains tutorial-style instructions for various concepts used by WelcomeBot.  Currently there is one tutorial, for unit testing.
 
 ## Setting up
+
 Currently, the bot is only compatible up to Python 2.7.
 
 To run the bot:
@@ -52,16 +47,19 @@ When creating tests, you can use the following series of commands to see whether
 
 <code>
 ./bin/coverage run test_bot.py
+./bin/coverage html
 </code>
 
-_Note_: You will likely need to install coverage.  The above command assumes you have installed it to a virtual environment.  If you haven't, the command to use is: <code>coverage run test_bot.py</code>
+You can then see the results in `htmlcov/index.html`.
+
+_Note_: You will likely need to install coverage.  The above command assumes you have installed it to a virtual environment.  If you haven't, use `coverage` instead of `bin/coverage`, for example: <code>coverage run test_bot.py</code>
 
 ## How to help
 
-The [issue tracker](https://github.com/shaunagm/oh-irc-bot/issues?state=open) lists improvements we want to make.  I strongly encourage you to contact me and say hello before you get started (I am shauna on the #openhatch IRC).  Please feel free to submit pull requests to address these issues.  If you're not familiar with how to do this using github, see [here](https://openhatch.org/wiki/Git_Basics).  You can also always ask me for help or  clarification.  
+The [issue tracker](https://github.com/shaunagm/oh-irc-bot/issues?state=open) lists improvements we want to make.  Tasks that are better for newcomers are labelled [first task](https://github.com/shaunagm/WelcomeBot/labels/first%20task).
+
+I strongly encourage you to contact me and say hello before you get started (I am shauna on the #openhatch IRC).  Please feel free to submit pull requests to address these issues.  If you're not familiar with how to do this using github, see [here](https://openhatch.org/wiki/Git_Basics).  You can also always ask me for help or  clarification.  
 
 ## Credit
 
 This bot was adapted from code found [here](http://wiki.shellium.org/w/Writing_an_IRC_bot_in_Python).
-
-Also [this](http://docs.python.org/2/library/queue.html) has been very helpful.

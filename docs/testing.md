@@ -121,7 +121,7 @@ Let's take a look at some output you might see.  First, there is a series of dot
 
     ...........F.FF.....EE.......F  
 
-Each dot or letter refers to a specific test being run.  An F means that the test failed.  An E means that there was an error.  
+Each dot or letter refers to a specific test being run.  An F means that the test failed.  An E means that there was an error.  A failed test is one in which the assert statement is incorrect, whereas a test that returns an error had some bug in the test that prevented it from reaching or finishing the assert statement.
 
 Let's take a closer look at what a failed test looks like.  I'm going to generate an error by altering `test_custom_wait_time()` to specify the wrong amount in `assertEqual()`.  You can cause similar test failures by changing assertions in `test_bot.py`.  
 
@@ -147,11 +147,13 @@ Different types of failures will give different output of varying helpfulness.  
 
 If you want to expand the tests to cover a new piece of code -- either code you have written, or that someone else has - you might find [Coverage](http://nedbatchelder.com/code/coverage/) to be a useful tool.  After installing coverage, you can run it, either in a virtual environment:
 
-    ./bin/coverage run test_bot.py 
+    ./bin/coverage run test_bot.py
+    ./bin/coverage html
 
 Or not in a virtual environment:
 
     coverage run test_bot.py
+    coverage html
 
 This will generate an html file which can be found by opening `htmlcov/index.html`.  This file gives you a report on the percentage of code covered by tests.  If you click the file being tested (not the test file, which should be covered 100%) you'll see a handy color-coded copy of the file indicated what is covered and what isn't.  Each statement is either covered ("run"), not covered ("missing") or excluded.  Excluded statements are excluded via the comment `pragma: no cover`, which we've used for WelcomeBot to ignore code interfacing with the socket library, as we're not sure how to test that yet.
 
