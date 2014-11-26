@@ -10,7 +10,8 @@ channel = "#openhatch"  # Please use #openhatch-bots rather than #openhatch for 
 botnick = "WelcomeBot"
 channel_greeters = ['shauna', 'paulproteus', 'marktraceur']
 hello_list = [r'hello', r'hi', r'hey', r'yo', r'sup'] 
-help_list = [r'help', r'info', r'faq', r'explain yourself']
+help_list = [r'help', r'info', r'faq', r'explain yourself'] 
+registered = true # If users don't want to identify, change the value to false. 
 
 
 #########################
@@ -71,7 +72,8 @@ def join_irc(ircsock):
     ircsock.send("NICK {}\n".format(botnick))  # Assign the nick to the bot.
     with open("password.txt", 'r') as f:
         password = f.read()
-    ircsock.send("PRIVMSG {} {} {} {}".format("NickServ","IDENTIFY", botnick, password))
+    if registered == true: 
+        ircsock.send("PRIVMSG {} {} {} {}".format("NickServ","IDENTIFY", botnick, password))
     ircsock.send("JOIN {} \n".format(channel)) # Joins channel
 
 # Reads the messages from the server and adds them to the Queue and prints
