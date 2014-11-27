@@ -9,6 +9,7 @@ server = "irc.freenode.net"
 channel = "#openhatch"  # Please use #openhatch-bots rather than #openhatch for testing
 botnick = "WelcomeBot"
 channel_greeters = ['shauna', 'paulproteus', 'marktraceur']
+wait_time = 60
 hello_list = [r'hello', r'hi', r'hey', r'yo', r'sup'] 
 help_list = [r'help', r'info', r'faq', r'explain yourself']
 
@@ -20,7 +21,7 @@ help_list = [r'help', r'info', r'faq', r'explain yourself']
 # Defines a bot
 class Bot(object):
 
-    def __init__(self, nick_source='nicks.csv', wait_time=60):
+    def __init__(self, nick_source='nicks.csv', wait_time=wait_time):
         self.nick_source = nick_source
         self.wait_time = wait_time
         self.known_nicks = []
@@ -47,6 +48,7 @@ class NewComer(object):
 
     def __init__(self, nick, bot):
         self.nick = nick
+	self.clean_nick = clean_nick(self.nick)
         self.born = time.time()
         bot.newcomers.append(self)
 
@@ -102,21 +104,20 @@ def welcome_nick(newcomer, ircsock):
                  "while, try emailing us at hello@openhatch.org or just try "
                  "coming back later.  FYI, you're now on my list of known "
                  "nicknames, so I won't bother you again."
-                 "\n".format(channel, newcomer, greeter_string("and", channel_greeters)))
+                 "\n".format(channel, newcomer, greeter_string(channel_greeters)))
 
 # Checks and manages the status of newcomers.
 def process_newcomers(bot, newcomerlist, ircsock, welcome=1):
     for person in newcomerlist:
         if welcome == 1:
             welcome_nick(person.nick, ircsock)
-        bot.add_known_nick(person.nick)
+        bot.add_known_nick(person.clean_nick)
         bot.newcomers.remove(person) 
 
 # Checks for messages.
 def parse_messages(ircmsg):
     try:
         actor = ircmsg.split(":")[1].split("!")[0] # and get the nick of the msg sender
-        actor = clean_nick(actor)
         return " ".join(ircmsg.split()), actor
     except:
         return None, None
@@ -135,24 +136,25 @@ def clean_nick(actor):
 def message_response(bot, ircmsg, actor, ircsock):
 
     # if someone other than a newcomer speaks into the channel
-    if ircmsg.find("PRIVMSG " + channel) != -1 and actor not in [i.nick for i in bot.newcomers]:
+    if ircmsg.find("PRIVMSG " + channel) != -1 and clean_nick(actor) not in [i.clean_nick for i in bot.newcomers]:
         process_newcomers(bot,bot.newcomers, ircsock, welcome=0)   # Process/check newcomers without welcoming them
 
     # if someone (other than the bot) joins the channel
     if ircmsg.find("JOIN " + channel) != -1 and actor != botnick:
-        if [actor.replace("_", "")] not in bot.known_nicks + [i.nick for i in bot.newcomers]:  # And they're new
+        if [clean_nick(actor)] not in bot.known_nicks + [i.clean_nick for i in bot.newcomers]:  # And they're new
             NewComer(actor, bot)
         
     # if someone changes their nick while still in newcomers update that nick   
     if ircmsg.find("NICK :") != -1 and actor != botnick:        
         for i in bot.newcomers: # if that person was in the newlist
             if i.nick == actor:
-                i.nick = clean_nick(ircmsg.split(":")[2]) # update to new nick (and clean up the nick)
+                i.nick = ircmsg.split(":")[2] # update to new nick (and clean up the nick)
+		i.clean_nick = clean_nick(i.nick)
 
     # If someone parts or quits the #channel...
     if ircmsg.find("PART " + channel) != -1 or ircmsg.find("QUIT") != -1:
         for i in bot.newcomers:  # and that person is on the newlist
-            if actor == i.nick:
+            if clean_nick(actor) == i.clean_nick:
                 bot.newcomers.remove(i)   # remove them from the list
 
     # If someone talks to (or refers to) the bot.
@@ -187,15 +189,14 @@ def bot_help(ircsock):
                  ".\n".format(channel))
 
 # Returns a grammatically correct string of the channel_greeters.
-def greeter_string(conjunction, greeters):
+def greeter_string(greeters):
     greeterstring = ""
     if len(greeters) > 2:
         for name in greeters[:-1]:
             greeterstring += "{}, ".format(name)
-        greeterstring += "{0} {1}".format(conjunction, greeters[-1])
+        greeterstring += "and {}".format(greeters[-1])
     elif len(greeters) == 2:
-        greeterstring = "{0} {1} {2}".format(greeters[0], conjunction,
-                                        greeters[1])
+        greeterstring = "{0} and {1}".format(greeters[0], greeters[1])
     else:
         greeterstring = greeters[0]
     return greeterstring
@@ -211,7 +212,7 @@ def wait_time_change(actor, ircmsg, ircsock):
             return int(finder.group())
     ircsock.send("PRIVMSG {0} :{1} you are not authorized to make that "
                  "change. Please contact one of the channel greeters, like {2}, for "
-                 "assistance.\n".format(channel, actor, greeter_string("or", channel_greeters)))
+                 "assistance.\n".format(channel, actor, greeter_string(channel_greeters)))
 
 # Responds to server Pings.
 def pong(ircsock):
@@ -237,4 +238,5 @@ def main():
 
 if __name__ == "__main__": # This line tells the interpreter to only execute main() if the program is being run, not imported.
     sys.exit(main())
+
 
