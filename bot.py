@@ -17,8 +17,9 @@ help_list = [r'help', r'info', r'faq', r'explain yourself']
 # Defines a bot
 class Bot(object):
 
-    def __init__(self, botnick, nick_source='nicks.csv', wait_time=60):
+    def __init__(self, botnick, welcome_message, nick_source='nicks.csv', wait_time=60):
 	self.botnick = botnick
+	self.welcome_message = welcome_message
         self.nick_source = nick_source
         self.wait_time = wait_time
         self.known_nicks = []
@@ -65,7 +66,6 @@ def parsesettings():
 		for option in parser.options(section):
 			settings[option] = parser.get(section, option)
 
-	print(settings)
 	return settings
 
 # Creates a socket that will be used to send and receive messages,
@@ -236,7 +236,7 @@ def main():
     settings = parsesettings()
     ircsock = irc_start(settings["server"]) 
     join_irc(ircsock, settings["botnick"], settings["channel"])
-    WelcomeBot = Bot(settings["botnick"])
+    WelcomeBot = Bot(settings["botnick"], settings["welcome_message"])
     while 1:  # Loop forever
         ready_to_read, b, c = select.select([ircsock],[],[], 1)  # b&c are ignored here
         process_newcomers(WelcomeBot, [i for i in WelcomeBot.newcomers if i.around_for() > WelcomeBot.wait_time],ircsock,settings["channel"], settings["channel_greeters"].split(","))
