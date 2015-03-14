@@ -1,7 +1,7 @@
 # Welcome to WelcomeBot.  Find source, documentation, etc here: https://github.com/shaunagm/WelcomeBot/  Licensed https://creativecommons.org/licenses/by-sa/2.0/
 
 # Import some necessary libraries.
-import socket, sys, time, csv, Queue, random, re, pdb, select
+import socket, sys, time, csv, Queue, random, re, pdb, select, os.path
 from threading import Thread
 
 # Some basic variables used to configure the bot.
@@ -10,9 +10,9 @@ channel = "#openhatch"  # Please use #openhatch-bots rather than #openhatch for 
 botnick = "WelcomeBot"
 channel_greeters = ['shauna', 'paulproteus', 'marktraceur']
 wait_time = 60
-hello_list = [r'hello', r'hi', r'hey', r'yo', r'sup'] 
-help_list = [r'help', r'info', r'faq', r'explain yourself'] 
-registered = true # If users don't want to identify, change the value to false. 
+hello_list = [r'hello', r'hi', r'hey', r'yo', r'sup']
+help_list = [r'help', r'info', r'faq', r'explain yourself']
+registered = False # If users don't want to identify, change the value to false.
 
 
 #########################
@@ -44,7 +44,7 @@ class Bot(object):
                                 quoting=csv.QUOTE_MINIMAL)
             nickwriter.writerow([new_known_nick])
 
-# Defines a newcomer object    
+# Defines a newcomer object
 class NewComer(object):
 
     def __init__(self, nick, bot):
@@ -58,7 +58,7 @@ class NewComer(object):
 
 
 #########################
-### Startup Functions ### 
+### Startup Functions ###
 #########################
 
 # Creates a socket that will be used to send and receive messages,
@@ -67,15 +67,16 @@ def irc_start(): # pragma: no cover  (this excludes this function from testing)
     ircsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ircsock.connect((server, 6667))  # Here we connect to server using port 6667.
     return ircsock
-    
+
 def join_irc(ircsock):
     ircsock.send("USER {0} {0} {0} :This is http://openhatch.org/'s greeter bot"
              ".\n".format(botnick))  # bot authentication
     ircsock.send("NICK {}\n".format(botnick))  # Assign the nick to the bot.
-    with open("password.txt", 'r') as f:
-        password = f.read()
-    if registered == true: 
-        ircsock.send("PRIVMSG {} {} {} {}".format("NickServ","IDENTIFY", botnick, password))
+    if os.path.isfile("password.txt"):
+        with open("password.txt", 'r') as f:
+            password = f.read()
+            if registered == True:
+                ircsock.send("PRIVMSG {} {} {} {}".format("NickServ","IDENTIFY", botnick, password))
     ircsock.send("JOIN {} \n".format(channel)) # Joins channel
 
 # Reads the messages from the server and adds them to the Queue and prints
@@ -117,7 +118,7 @@ def process_newcomers(bot, newcomerlist, ircsock, welcome=1):
         if welcome == 1:
             welcome_nick(person.nick, ircsock)
         bot.add_known_nick(person.clean_nick)
-        bot.newcomers.remove(person) 
+        bot.newcomers.remove(person)
 
 # Checks for messages.
 def parse_messages(ircmsg):
@@ -126,7 +127,7 @@ def parse_messages(ircmsg):
         return " ".join(ircmsg.split()), actor
     except:
         return None, None
-        
+
 # Cleans a nickname of decorators/identifiers
 def clean_nick(actor):
     if actor:   # In case an empty string gets passed
@@ -150,9 +151,9 @@ def message_response(bot, ircmsg, actor, ircsock):
     if ircmsg.find("JOIN " + channel) != -1 and actor != botnick:
         if [clean_nick(actor)] not in bot.known_nicks + [i.clean_nick for i in bot.newcomers]:  # And they're new
             NewComer(actor, bot)
-        
-    # if someone changes their nick while still in newcomers update that nick   
-    if ircmsg.find("NICK :") != -1 and actor != botnick:        
+
+    # if someone changes their nick while still in newcomers update that nick
+    if ircmsg.find("NICK :") != -1 and actor != botnick:
         for i in bot.newcomers: # if that person was in the newlist
             if i.nick == actor:
                 i.nick = ircmsg.split(":")[2] # update to new nick (and clean up the nick)
@@ -223,15 +224,15 @@ def wait_time_change(actor, ircmsg, ircsock):
 
 # Responds to server Pings.
 def pong(ircsock):
-    ircsock.send("PONG :pingis\n") 
+    ircsock.send("PONG :pingis\n")
 
-    
+
 ##########################
 ### The main function. ###
 ##########################
 
 def main():
-    ircsock = irc_start() 
+    ircsock = irc_start()
     join_irc(ircsock)
     WelcomeBot = Bot()
     while 1:  # Loop forever
@@ -245,5 +246,3 @@ def main():
 
 if __name__ == "__main__": # This line tells the interpreter to only execute main() if the program is being run, not imported.
     sys.exit(main())
-
-
