@@ -8,3 +8,4 @@ lib
 local
 bin
 error.log
+nicks.csv
