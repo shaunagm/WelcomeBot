@@ -3,7 +3,6 @@
 # Import some necessary libraries.
 import socket, sys, time, csv, Queue, random, re, pdb, select, os.path
 from threading import Thread
-import ConfigParser
 
 # To configure bot, please make changes in bot_settings.py
 import bot_settings as settings
