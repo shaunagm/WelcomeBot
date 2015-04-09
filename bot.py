@@ -174,7 +174,7 @@ def message_response(bot, ircmsg, actor, ircsock, channel, greeters):
 
     # If the server pings us then we've got to respond!
     if ircmsg.find("PING :") != -1:
-        pong(ircsock)
+        pong(ircsock, ircmsg)
 
 
 #############################################################
@@ -219,8 +219,9 @@ def wait_time_change(actor, ircmsg, ircsock, channel, channel_greeters):
                  "assistance.\n".format(channel, actor, greeter_string(channel_greeters)))
 
 # Responds to server Pings.
-def pong(ircsock):
-    ircsock.send("PONG :pingis\n")
+def pong(ircsock, ircmsg):
+    response = "PONG :" + ircmsg.split("PING :")[1] + "\n"
+    ircsock.send(response)
 
 
 ##########################

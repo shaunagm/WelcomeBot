@@ -194,7 +194,7 @@ class TestMessageResponse(unittest.TestCase):
 
     def test_pong(self):
         botcode.message_response(self.bot,"PING :","Shauna",ircsock=self.ircsock, channel=settings.channel, greeters=settings.channel_greeters)   # Replace this with actual ping message
-        self.assertEqual(self.ircsock.sent_message(),"PONG :pingis\n")
+        self.assertEqual(self.ircsock.sent_message(),"PONG :\n")
 
     def test_bad_pong(self):
         botcode.message_response(self.bot,"PING!!! :","Shauna",ircsock=self.ircsock, channel=settings.channel, greeters=settings.channel_greeters)   # Replace this with actual ping message
