@@ -187,10 +187,12 @@ class TestMessageResponse(unittest.TestCase):
     def test_wait_time_from_admin(self):
         botcode.message_response(self.bot,"{} --wait-time 40".format(self.bot.botnick),"shauna",ircsock=self.ircsock, channel=settings.channel, greeters=settings.channel_greeters)     # Channel-greeters may also be changed.  :(
         self.assertEqual(self.ircsock.sent_message(), "PRIVMSG {} :shauna the wait time is changing to 40 seconds.\n".format(settings.channel))
+        self.assertEqual(self.bot.wait_time, 40)
 
     def test_wait_time_from_non_admin(self):
         botcode.message_response(self.bot,"{} --wait-time 40".format(self.bot.botnick),"Impostor",ircsock=self.ircsock, channel=settings.channel, greeters=settings.channel_greeters)     # Channel-greeters may also be changed.  :(
         self.assertEqual(self.ircsock.sent_message(), "PRIVMSG {0} :Impostor you are not authorized to make that change. Please contact one of the channel greeters, like {1}, for assistance.\n".format(settings.channel,botcode.greeter_string(settings.channel_greeters)))
+        self.assertEqual(self.bot.wait_time, settings.wait_time)
 
     def test_pong(self):
         botcode.message_response(self.bot,"PING :","Shauna",ircsock=self.ircsock, channel=settings.channel, greeters=settings.channel_greeters)   # Replace this with actual ping message

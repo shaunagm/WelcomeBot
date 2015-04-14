@@ -170,7 +170,7 @@ def message_response(bot, ircmsg, actor, ircsock, channel, greeters):
 
     # If someone tries to change the wait time...
     if ircmsg.find(bot.botnick + " --wait-time ") != -1:
-        bot.wait_time = wait_time_change(actor, ircmsg, ircsock, channel, greeters)  # call this to check and change it
+        bot.wait_time = wait_time_change(actor, ircmsg, ircsock, channel, greeters, bot)  # call this to check and change it
 
     # If the server pings us then we've got to respond!
     if ircmsg.find("PING :") != -1:
@@ -206,17 +206,20 @@ def greeter_string(greeters):
     return greeterstring
 
 # Changes the wait time from the channel.
-def wait_time_change(actor, ircmsg, ircsock, channel, channel_greeters):
+def wait_time_change(actor, ircmsg, ircsock, channel, channel_greeters, bot):
     for admin in channel_greeters:
         if actor == admin:
             finder = re.search(r'\d\d*', re.search(r'--wait-time \d\d*', ircmsg)
                             .group())
             ircsock.send("PRIVMSG {0} :{1} the wait time is changing to {2} "
                          "seconds.\n".format(channel, actor, finder.group()))
-            return int(finder.group())
+            new_wait_time = int(finder.group())
+            return new_wait_time
     ircsock.send("PRIVMSG {0} :{1} you are not authorized to make that "
                  "change. Please contact one of the channel greeters, like {2}, for "
                  "assistance.\n".format(channel, actor, greeter_string(channel_greeters)))
+    unchanged_wait_time = bot.wait_time
+    return unchanged_wait_time
 
 # Responds to server Pings.
 def pong(ircsock, ircmsg):
