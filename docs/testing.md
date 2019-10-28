@@ -2,9 +2,9 @@
 
 In order to quickly and easily test changes to WelcomeBot, we've created an automated test suite using Python's unittests.  This tutorial will cover the concepts necessary to use our suite, but unit testing is an important concept worth checking out in its own right.  Here are some great resources you might want to check out:
 
-* [Getting Started Testing](https://www.youtube.com/watch?v=FxSsnHeWQBY), a talk by [Ned Batchelder](http://nedbatchelder.com/) at PyCon 2014
-* [Understanding Unit Testing](http://www.jeffknupp.com/blog/2013/12/09/improve-your-python-understanding-unit-testing/) by Jeff Knupp
-* [Unit Test Introduction](http://pythontesting.net/framework/unittest/unittest-introduction/) by Brian Okken
+* [ Getting Started Testing ](https://www.youtube.com/watch?v=FxSsnHeWQBY), a talk by [Ned Batchelder](http://nedbatchelder.com/) at PyCon 2014
+* [ Understanding Unit Testing ](http://www.jeffknupp.com/blog/2013/12/09/improve-your-python-understanding-unit-testing/) by Jeff Knupp
+* [ Unit Test Introduction ](http://pythontesting.net/framework/unittest/unittest-introduction/) by Brian Okken
 
 ## Tutorial
 
